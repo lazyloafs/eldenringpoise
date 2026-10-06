@@ -9,6 +9,8 @@ def names(f):
         except:pass
     return d
 wn,an,bn,nn,gn,sn=[names(x) for x in('EquipParamWeapon','AtkParam_Pc','Bullet','NpcParam','EquipParamGem','SwordArtsParam')]
+GN={int(k):v for k,v in json.load(open('data/game_names.json')).items()}
+NG={int(k):v for k,v in json.load(open('data/npc_names.json')).items()}
 TYPES={1:'Dagger',3:'Straight Sword',5:'Greatsword',7:'Colossal Sword',9:'Curved Sword',11:'Curved Greatsword',13:'Katana',14:'Twinblade',15:'Thrusting Sword',16:'Heavy Thrusting Sword',17:'Axe',19:'Greataxe',21:'Hammer',23:'Great Hammer',24:'Flail',25:'Spear',28:'Great Spear',29:'Halberd',31:'Reaper',33:'Fist',35:'Fist',37:'Claw',39:'Whip',41:'Colossal Weapon',50:'Light Bow',51:'Bow',53:'Greatbow',55:'Crossbow',56:'Ballista',57:'Glintstone Staff',61:'Sacred Seal',65:'Small Shield',67:'Medium Shield',69:'Greatshield',87:'Torch',88:'Hand-to-Hand',89:'Perfume Bottle',90:'Thrusting Shield',91:'Throwing Blade',92:'Backhand Blade',93:'Light Greatsword',94:'Great Katana',95:'Beast Claw'}
 def levels(t):
     n=0
@@ -37,7 +39,9 @@ def moveset(v):
     movesets[v]=rows
 weapons=[]
 for wid,w in sorted(W.items()):
-    n=wn.get(wid,'')
+    n=GN.get(wid) or wn.get(wid,'')
+    n=n.replace('[ERROR]','').strip()
+    if n in('[ERROR]','DLC dummy'): continue
     if wid%1000 or not n or n.startswith('[NPC]') or w['wepType'] not in TYPES or w['wepType'] in (81,83,85,86): continue
     t=w['reinforceTypeId']; lv=levels(t)
     up='Somber' if 0<lv<=10 else ('Regular' if lv>10 else 'Other')
@@ -74,13 +78,13 @@ for sk,cats in sorted(ash.items()):
 bos={}
 for nid,v in N.items():
     if not v['isSoulGetByBoss']: continue
-    n=nn.get(nid,'')
-    if not n or n=='?': continue
+    n=NG.get(v.get('nameId',-1)) or nn.get(nid,'')
+    if not n or n=='?' or n=='[ERROR]': continue
     key=(n,v['superArmorDurability'],round(v['superArmorRecoverCorrection'],3),v['hp'])
     if key not in bos: bos[key]=dict(name=n,poise=round(v['superArmorDurability'],1),rec=round(v['superArmorRecoverCorrection'],3),saRate=round(v['saRecoveryRate'],3),hp=v['hp'],ids=[nid])
     else: bos[key]['ids'].append(nid)
 bosses=sorted(bos.values(),key=lambda b:b['ids'][0])
-FR=json.load(open('data/frames.json'))
+FR=json.load(open('/home/claude/frames.json'))
 json.dump(dict(frames=FR,movesets={str(k):v for k,v in movesets.items()},weapons=weapons,ashes=ashes,bosses=bosses),open('/home/claude/wiki_data.json','w'),separators=(',',':'))
 print(len(weapons),sum(len(v) for v in movesets.values()),len(ashes),sum(a['isAsh'] for a in ashes),len(bosses))
 print(collections.Counter(w['up'] for w in weapons))
