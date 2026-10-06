@@ -69,10 +69,11 @@ footer{margin-top:32px;color:var(--mute);font-size:12px}
 <label>Upgrade path<select id="wu"><option value="">All</option><option>Regular</option><option>Somber</option></select></label>
 <label>Hand<select id="wh"><option value="">Any</option><option value="1H">One-handed</option><option value="2H">Two-handed</option></select></label>
 <label>Attack type<select id="wk"></select></label>
-<label>Sort<select id="ws"><option value="name">Name</option><option value="sa">Base poise</option><option value="max">Highest hit</option><option value="pf">Poise per frame</option><option value="r1">Fastest R1 startup</option><option value="fast">Fastest any attack</option></select></label>
+<label>Sort<select id="ws"><option value="name">Name</option><option value="sa">Base poise</option><option value="max">Highest hit</option><option value="pf">Poise per frame</option><option value="r1">Fastest R1 startup</option><option value="fast">Fastest any attack</option><option value="combo">Best R1 chain combo</option></select></label>
+<label>Combo frame limit<input type="number" id="wf" value="60" min="10" max="400" step="5" style="width:90px"></label>
 </div>
 <div class="count" id="wc"></div>
-<div class="tbl"><table><thead><tr><th>Weapon</th><th>Class</th><th>Upgrade</th><th class="n">Base poise</th><th class="n">Highest hit</th><th>Highest hit is</th><th class="n">Its startup</th><th class="n">Best per frame</th><th>Best per frame is</th><th class="n">R1 startup</th></tr></thead><tbody id="wb"></tbody></table></div>
+<div class="tbl"><table><thead><tr><th>Weapon</th><th>Class</th><th>Upgrade</th><th class="n">Base poise</th><th class="n">Highest hit</th><th>Highest hit is</th><th class="n">Its startup</th><th class="n">Best per frame</th><th>Best per frame is</th><th class="n">R1 startup</th><th>Best R1 chain combo (within limit)</th></tr></thead><tbody id="wb"></tbody></table></div>
 </section>
 
 <section id="a" hidden>
@@ -138,9 +139,27 @@ const types=[...new Set(D.weapons.map(w=>w.type))].sort();
 $('#wt').innerHTML='<option value="">All classes</option>'+types.map(t=>`<option>${esc(t)}</option>`).join('');
 const FPS=30;
 function frOf(w,j){const f=D.frames[w.cat];const x=f&&f[j];return x&&x[0]>=3?x:null}
+
+// R1 chain combos: consecutive R1 hits, estimated frames = sum of earlier hits' active-until + last hit's startup
+function chains(w){const out=[];
+ [['1H',0],['2H',200]].forEach(([hand,base])=>{
+  if(FL.hand&&FL.hand!==hand)return;
+  const seq=[];
+  for(let i=0;i<10;i++){const j=base+i*10;
+   const ms=w.mv.filter(m=>m[0]===j);const f=D.frames[w.cat]&&D.frames[w.cat][j];
+   if(!ms.length||!f||f[0]<3)break;
+   const p=Math.max(...ms.map(m=>P(w.sa,m[2],m[3])));if(!(p>0))break;
+   seq.push({p,s:f[0],e:f[1]})}
+  let tp=0,tf=0;
+  seq.forEach((x,i)=>{if(i>0)tf+=seq[i-1].e;tp+=x.p;
+   if(i>=1)out.push({hand,n:i+1,p:tp,f:tf+x.s})})});
+ return out}
+function bestCombo(w){const lim=+$('#wf').value||60;const c=chains(w).filter(x=>x.f<=lim);
+ if(!c.length)return null;return c.reduce((a,b)=>b.p>a.p||(b.p===a.p&&b.f<a.f)?b:a)}
+const cTxt=c=>c?`${c.hand} R1 #1→#${c.n}: <b>${fmt(c.p)}</b> in f${c.f}`:'<span class="mute">none</span>';
 const FL={kind:'',hand:''};
 function wrows(w){return w.mv.map(m=>{const p=P(w.sa,m[2],m[3]);const f=frOf(w,m[0]);return {m,p,l:lab(m[0]),f,pf:f?p/f[0]:0}}).filter(x=>x.p>0&&(!FL.kind||x.l.kind===FL.kind)&&(!FL.hand||x.l.hand===FL.hand))}
-function calc(w){const t=topOf(w);w.max=t?t.p:0;w.topl=t?lbl(t):'—';w.topf=t&&t.f?t.f[0]:null;const q=pfOf(w);w.bpf=q?q.pf:0;w.bpfl=q?lbl(q)+' (f'+q.f[0]+')':'n/a';const r1=wrows(w).filter(x=>x.f&&x.l.kind==='R1 (any chain hit)');w.r1=r1.length?Math.min(...r1.map(x=>x.f[0])):null;w.fast=Math.min(999,...wrows(w).filter(x=>x.f).map(x=>x.f[0]));w.has=!!t}
+function calc(w){const t=topOf(w);w.max=t?t.p:0;w.topl=t?lbl(t):'—';w.topf=t&&t.f?t.f[0]:null;const q=pfOf(w);w.bpf=q?q.pf:0;w.bpfl=q?lbl(q)+' (f'+q.f[0]+')':'n/a';const r1=wrows(w).filter(x=>x.f&&x.l.kind==='R1 (any chain hit)');w.r1=r1.length?Math.min(...r1.map(x=>x.f[0])):null;w.fast=Math.min(999,...wrows(w).filter(x=>x.f).map(x=>x.f[0]));w.has=!!t;w.cb=bestCombo(w)}
 function topOf(w){const r=wrows(w);if(!r.length)return null;return r.reduce((a,b)=>b.p>a.p?b:a)}
 function pfOf(w){const r=wrows(w).filter(x=>x.f);if(!r.length)return null;return r.reduce((a,b)=>b.pf>a.pf?b:a)}
 function lbl(x){return x.l.name+(x.l.hit>1?', hit '+x.l.hit:'')}
@@ -154,6 +173,8 @@ function wmoves(w){
   const bpf=rows.filter(x=>x.f).sort((a,b)=>b.pf-a.pf).slice(0,5);
   const mk=(L,k)=>'<table class="mini"><tbody>'+L.map((x,i)=>`<tr><td>${i+1}. ${esc(lbl(x))}</td><td class="n">${frTxt(x)}</td><td class="n"><b>${k==='pf'?f1(x.pf)+' /frame':fmt(x.p)}</b></td></tr>`).join('')+'</tbody></table>';
   let h=(FL.kind||FL.hand?'<div class="mute" style="margin-bottom:8px">Showing only: '+esc((FL.hand?FL.hand+' ':'')+(FL.kind||'all attacks'))+'. Totals in the main table use the same filter.</div>':'')+'<div class="two"><div><div class="sec">Highest poise damage</div>'+mk(best,'p')+'</div><div><div class="sec">Highest poise per startup frame</div>'+mk(bpf,'pf')+'</div></div>';
+  const cs=chains(w);
+  if(cs.length){const lim=+$('#wf').value||60;h+='<div class="sec">R1 chain combos</div><table class="mini"><thead><tr><th>Combo</th><th class="n">Total poise</th><th class="n">Est. frames to final hit</th></tr></thead><tbody>'+cs.slice().sort((a,b)=>b.p-a.p).map(c=>`<tr${c.f<=lim?'':' class="mute"'}><td>${c.hand} R1 #1→#${c.n} (${c.n} hits)</td><td class="n"><b>${fmt(c.p)}</b></td><td class="n">f${c.f}</td></tr>`).join('')+'</tbody></table><div class="mute" style="font-size:12px;margin:4px 0 8px">Estimate: each earlier hit counts up to its active-until frame, then the next attack starts, and the last hit adds its startup. Real chains need the cancel window to open first, so actual times are longer. Greyed rows exceed the frame limit.</div>';}
   const g={};rows.forEach(x=>{(g[x.l.grp]=g[x.l.grp]||[]).push(x)});
   const order=['One-handed light','One-handed heavy and movement','Two-handed light','Two-handed heavy and movement','Mounted and other','Ripostes and backstabs','Other'];
   order.filter(k=>g[k]).forEach(k=>{
@@ -168,15 +189,15 @@ function fillKinds(){const c={};D.weapons.forEach(w=>w.mv.forEach(m=>{if(P(w.sa,
 function renderW(){FL.kind=$('#wk').value;FL.hand=$('#wh').value;
   const q=$('#wq').value.toLowerCase(),t=$('#wt').value,u=$('#wu').value,s=$('#ws').value;
   D.weapons.forEach(calc);let L=D.weapons.filter(w=>(FL.kind||FL.hand?w.has:true)&&(!q||w.name.toLowerCase().includes(q))&&(!t||w.type===t)&&(!u||w.up===u));
-  L.sort(s==='name'?(a,b)=>a.name.localeCompare(b.name):s==='sa'?(a,b)=>b.sa-a.sa||a.name.localeCompare(b.name):s==='max'?(a,b)=>b.max-a.max||a.name.localeCompare(b.name):s==='pf'?(a,b)=>b.bpf-a.bpf||a.name.localeCompare(b.name):s==='r1'?(a,b)=>(a.r1||999)-(b.r1||999)||a.name.localeCompare(b.name):(a,b)=>a.fast-b.fast||a.name.localeCompare(b.name));
+  L.sort(s==='name'?(a,b)=>a.name.localeCompare(b.name):s==='sa'?(a,b)=>b.sa-a.sa||a.name.localeCompare(b.name):s==='max'?(a,b)=>b.max-a.max||a.name.localeCompare(b.name):s==='pf'?(a,b)=>b.bpf-a.bpf||a.name.localeCompare(b.name):s==='r1'?(a,b)=>(a.r1||999)-(b.r1||999)||a.name.localeCompare(b.name):s==='combo'?(a,b)=>((b.cb?b.cb.p:-1)-(a.cb?a.cb.p:-1))||((a.cb?a.cb.f:999)-(b.cb?b.cb.f:999))||a.name.localeCompare(b.name):(a,b)=>a.fast-b.fast||a.name.localeCompare(b.name));
   $('#wc').textContent=L.length+' weapons';
-  $('#wb').innerHTML=L.map((w,i)=>`<tr class="row" tabindex="0" data-i="${w.id}"><td>${esc(w.name)}</td><td>${esc(w.type)}</td><td><span class="tag ${w.up==='Somber'?'som':''}">${w.up}${w.maxLv?' +'+w.maxLv:''}</span></td><td class="n">${fmt(w.sa)}</td><td class="n">${fmt(w.max)}</td><td>${esc(w.topl)}</td><td class="n">${w.topf?'f'+w.topf:'n/a'}</td><td class="n">${w.bpf?f1(w.bpf):'n/a'}</td><td>${esc(w.bpfl)}</td><td class="n">${w.r1?'f'+w.r1:'n/a'}</td></tr>`).join('');
+  $('#wb').innerHTML=L.map((w,i)=>`<tr class="row" tabindex="0" data-i="${w.id}"><td>${esc(w.name)}</td><td>${esc(w.type)}</td><td><span class="tag ${w.up==='Somber'?'som':''}">${w.up}${w.maxLv?' +'+w.maxLv:''}</span></td><td class="n">${fmt(w.sa)}</td><td class="n">${fmt(w.max)}</td><td>${esc(w.topl)}</td><td class="n">${w.topf?'f'+w.topf:'n/a'}</td><td class="n">${w.bpf?f1(w.bpf):'n/a'}</td><td>${esc(w.bpfl)}</td><td class="n">${w.r1?'f'+w.r1:'n/a'}</td><td>${cTxt(w.cb)}</td></tr>`).join('');
 }
 $('#wb').addEventListener('click',e=>{const r=e.target.closest('.row');if(!r)return;const n=r.nextElementSibling;
   if(n&&n.classList.contains('det')){n.remove();return}
-  const w=D.weapons.find(x=>x.id==r.dataset.i);const d=document.createElement('tr');d.className='det';d.innerHTML=`<td colspan="9">${wmoves(w)}</td>`;r.after(d)});
+  const w=D.weapons.find(x=>x.id==r.dataset.i);const d=document.createElement('tr');d.className='det';d.innerHTML=`<td colspan="11">${wmoves(w)}</td>`;r.after(d)});
 $('#wb').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.target.click()}});
-['wq','wt','wu','ws','wk','wh'].forEach(i=>$('#'+i).addEventListener('input',renderW));
+['wq','wt','wu','ws','wk','wh','wf'].forEach(i=>$('#'+i).addEventListener('input',renderW));
 // ashes
 const aw=D.weapons.slice().sort((a,b)=>a.name.localeCompare(b.name));
 $('#aw').innerHTML=aw.map(w=>`<option value="${w.sa}" ${w.name==='Uchigatana'?'selected':''}>${esc(w.name)} (base ${fmt(w.sa)})</option>`).join('');
