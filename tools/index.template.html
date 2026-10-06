@@ -152,11 +152,12 @@ function chains(w){const out=[];
    seq.push({p,s:f[0],e:f[1]})}
   let tp=0,tf=0;
   seq.forEach((x,i)=>{if(i>0)tf+=seq[i-1].e;tp+=x.p;
-   if(i>=1)out.push({hand,n:i+1,p:tp,f:tf+x.s})})});
+   if(i>=1)out.push({hand,n:i+1,p:tp,f:tf+x.s,parts:seq.slice(0,i+1).map(y=>y.p)})})});
  return out}
 function bestCombo(w){const lim=+$('#wf').value||60;const c=chains(w).filter(x=>x.f<=lim);
  if(!c.length)return null;return c.reduce((a,b)=>b.p>a.p||(b.p===a.p&&b.f<a.f)?b:a)}
-const cTxt=c=>c?`${c.hand} R1 #1→#${c.n}: <b>${fmt(c.p)}</b> in f${c.f}`:'<span class="mute">none</span>';
+const brk=c=>c.parts.map(fmt).join(' + ');
+const cTxt=c=>c?`${c.hand} R1 #1→#${c.n}: <b>${fmt(c.p)}</b> in f${c.f}<div class="mute" style="font-size:12px">${brk(c)} = ${fmt(c.p)}</div>`:'<span class="mute">none</span>';
 const FL={kind:'',hand:''};
 function wrows(w){return w.mv.map(m=>{const p=P(w.sa,m[2],m[3]);const f=frOf(w,m[0]);return {m,p,l:lab(m[0]),f,pf:f?p/f[0]:0}}).filter(x=>x.p>0&&(!FL.kind||x.l.kind===FL.kind)&&(!FL.hand||x.l.hand===FL.hand))}
 function calc(w){const t=topOf(w);w.max=t?t.p:0;w.topl=t?lbl(t):'—';w.topf=t&&t.f?t.f[0]:null;const q=pfOf(w);w.bpf=q?q.pf:0;w.bpfl=q?lbl(q)+' (f'+q.f[0]+')':'n/a';const r1=wrows(w).filter(x=>x.f&&x.l.kind==='R1 (any chain hit)');w.r1=r1.length?Math.min(...r1.map(x=>x.f[0])):null;w.fast=Math.min(999,...wrows(w).filter(x=>x.f).map(x=>x.f[0]));w.has=!!t;w.cb=bestCombo(w)}
@@ -174,7 +175,7 @@ function wmoves(w){
   const mk=(L,k)=>'<table class="mini"><tbody>'+L.map((x,i)=>`<tr><td>${i+1}. ${esc(lbl(x))}</td><td class="n">${frTxt(x)}</td><td class="n"><b>${k==='pf'?f1(x.pf)+' /frame':fmt(x.p)}</b></td></tr>`).join('')+'</tbody></table>';
   let h=(FL.kind||FL.hand?'<div class="mute" style="margin-bottom:8px">Showing only: '+esc((FL.hand?FL.hand+' ':'')+(FL.kind||'all attacks'))+'. Totals in the main table use the same filter.</div>':'')+'<div class="two"><div><div class="sec">Highest poise damage</div>'+mk(best,'p')+'</div><div><div class="sec">Highest poise per startup frame</div>'+mk(bpf,'pf')+'</div></div>';
   const cs=chains(w);
-  if(cs.length){const lim=+$('#wf').value||60;h+='<div class="sec">R1 chain combos</div><table class="mini"><thead><tr><th>Combo</th><th class="n">Total poise</th><th class="n">Est. frames to final hit</th></tr></thead><tbody>'+cs.slice().sort((a,b)=>b.p-a.p).map(c=>`<tr${c.f<=lim?'':' class="mute"'}><td>${c.hand} R1 #1→#${c.n} (${c.n} hits)</td><td class="n"><b>${fmt(c.p)}</b></td><td class="n">f${c.f}</td></tr>`).join('')+'</tbody></table><div class="mute" style="font-size:12px;margin:4px 0 8px">Estimate: each earlier hit counts up to its active-until frame, then the next attack starts, and the last hit adds its startup. Real chains need the cancel window to open first, so actual times are longer. Greyed rows exceed the frame limit.</div>';}
+  if(cs.length){const lim=+$('#wf').value||60;h+='<div class="sec">R1 chain combos</div><table class="mini"><thead><tr><th>Combo</th><th>Poise per hit</th><th class="n">Total poise</th><th class="n">Est. frames to final hit</th></tr></thead><tbody>'+cs.slice().sort((a,b)=>b.p-a.p).map(c=>`<tr${c.f<=lim?'':' class="mute"'}><td>${c.hand} R1 #1→#${c.n} (${c.n} hits)</td><td>${brk(c)}</td><td class="n"><b>${fmt(c.p)}</b></td><td class="n">f${c.f}</td></tr>`).join('')+'</tbody></table><div class="mute" style="font-size:12px;margin:4px 0 8px">Estimate: each earlier hit counts up to its active-until frame, then the next attack starts, and the last hit adds its startup. Real chains need the cancel window to open first, so actual times are longer. Greyed rows exceed the frame limit.</div>';}
   const g={};rows.forEach(x=>{(g[x.l.grp]=g[x.l.grp]||[]).push(x)});
   const order=['One-handed light','One-handed heavy and movement','Two-handed light','Two-handed heavy and movement','Mounted and other','Ripostes and backstabs','Other'];
   order.filter(k=>g[k]).forEach(k=>{
