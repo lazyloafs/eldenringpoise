@@ -1,0 +1,197 @@
+<title>Elden Ring Poise Wiki</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Marcellus&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: sticky tab bar over a single wide column; each tab is a searchable table with expandable rows. */
+:root{--bg:#f3f1ec;--panel:#fbfaf7;--fg:#1d1b16;--mute:#6b665a;--line:#dcd7ca;--accent:#8a6a1f;--accent-fg:#fff;--hi:#f0e6c8;--bad:#9a3a2a;
+--display:"Marcellus","Trajan Pro",Georgia,serif;--body:"IBM Plex Sans",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#131210;--panel:#1b1a16;--fg:#ebe6d8;--mute:#9a9484;--line:#312e26;--accent:#d3ad54;--accent-fg:#16130b;--hi:#2c2713;--bad:#e08a76;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#131210;--panel:#1b1a16;--fg:#ebe6d8;--mute:#9a9484;--line:#312e26;--accent:#d3ad54;--accent-fg:#16130b;--hi:#2c2713;--bad:#e08a76;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);font:14px/1.5 var(--body);padding-inline:16px;padding-block:0 48px}
+.wrap{max-width:1100px;margin:0 auto}
+header{padding-block:28px 12px}
+h1{font:400 clamp(28px,5vw,40px)/1.1 var(--display);margin:0 0 6px;text-wrap:balance}
+.sub{color:var(--mute);max-width:70ch;margin:0}
+nav{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);display:flex;gap:4px;border-bottom:1px solid var(--line);padding-block:8px;z-index:5;flex-wrap:wrap}
+nav button{font:500 14px var(--body);background:none;color:var(--mute);border:1px solid transparent;border-radius:4px;padding:7px 14px;cursor:pointer}
+nav button[aria-selected="true"]{color:var(--accent-fg);background:var(--accent)}
+nav button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,.row:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.tools{display:flex;gap:10px;flex-wrap:wrap;padding-block:16px 8px;align-items:end}
+.tools label{display:flex;flex-direction:column;gap:3px;font-size:12px;color:var(--mute);letter-spacing:.04em;text-transform:uppercase;min-width:0}
+input,select{font:14px var(--body);background:var(--panel);color:var(--fg);border:1px solid var(--line);border-radius:4px;padding:7px 9px;min-width:0;max-width:100%}
+input[type=search]{width:240px}
+.note{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--accent);padding:10px 14px;border-radius:2px;margin-block:12px;color:var(--mute);font-size:13px}
+.note b{color:var(--fg)}
+.count{color:var(--mute);font-size:13px;margin-block:4px 8px}
+.tbl{overflow-x:auto;border:1px solid var(--line);background:var(--panel);border-radius:4px}
+table{border-collapse:collapse;width:100%;min-width:560px}
+#w table:not(.mini){min-width:900px}
+th,td{text-align:left;padding:7px 12px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:500 12px var(--body);letter-spacing:.05em;text-transform:uppercase;color:var(--mute);background:var(--bg);position:sticky;top:0}
+th.s{cursor:pointer}
+td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
+.row{cursor:pointer}.row:hover{background:var(--hi)}
+.tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:9px;border:1px solid var(--line);color:var(--mute)}
+.tag.som{color:var(--accent);border-color:var(--accent)}
+.det td{background:var(--bg);padding:12px}
+.sec{font:400 16px var(--display);margin:12px 0 6px}
+.sec:first-child{margin-top:0}
+.mini{width:100%;min-width:0;font-size:13px}
+.two{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px}
+.tbl.in{border:0;background:none}
+.mini th{position:static}
+.card{border:1px solid var(--line);background:var(--panel);border-radius:4px;margin-block:8px}
+.card summary{padding:10px 14px;cursor:pointer;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.card summary b{font:400 17px var(--display)}
+.card .body{padding:0 14px 12px;overflow-x:auto}
+.mono{font-family:var(--mono)}
+.mute{color:var(--mute)}
+.bar{display:inline-block;height:6px;background:var(--accent);border-radius:3px;vertical-align:middle;margin-left:8px}
+footer{margin-top:32px;color:var(--mute);font-size:12px}
+@media (prefers-reduced-motion:no-preference){.row{transition:background .12s}}
+</style>
+<div class="wrap">
+<header>
+<h1>Elden Ring Poise Wiki</h1>
+<p class="sub">Poise damage for every weapon, Ash of War attack and bullet, plus boss poise, read directly from the game's regulation.bin on your install.</p>
+</header>
+<nav role="tablist" id="tabs">
+<button role="tab" aria-selected="true" data-t="w">Weapons</button>
+<button role="tab" aria-selected="false" data-t="a">Ashes of War</button>
+<button role="tab" aria-selected="false" data-t="b">Bosses</button>
+<button role="tab" aria-selected="false" data-t="i">About the numbers</button>
+</nav>
+
+<section id="w">
+<div class="tools">
+<label>Search<input type="search" id="wq" placeholder="Weapon name"></label>
+<label>Class<select id="wt"></select></label>
+<label>Upgrade path<select id="wu"><option value="">All</option><option>Regular</option><option>Somber</option></select></label>
+<label>Sort<select id="ws"><option value="name">Name</option><option value="sa">Base poise</option><option value="max">Highest hit</option><option value="pf">Poise per frame</option><option value="r1">Fastest R1 startup</option><option value="fast">Fastest any attack</option></select></label>
+</div>
+<div class="count" id="wc"></div>
+<div class="tbl"><table><thead><tr><th>Weapon</th><th>Class</th><th>Upgrade</th><th class="n">Base poise</th><th class="n">Highest hit</th><th>Highest hit is</th><th class="n">Its startup</th><th class="n">Best per frame</th><th>Best per frame is</th><th class="n">R1 startup</th></tr></thead><tbody id="wb"></tbody></table></div>
+</section>
+
+<section id="a" hidden>
+<div class="note"><b>Ash of War poise = weapon base poise × attack multiplier + flat.</b> Pick the weapon the Ash is on and every number below recalculates.</div>
+<div class="tools">
+<label>Search<input type="search" id="aq" placeholder="Ash of War name"></label>
+<label>Weapon<select id="aw"></select></label>
+<label>Show<select id="ak"><option value="ash">Equippable Ashes</option><option value="all">Everything (incl. unique weapon skills)</option></select></label>
+</div>
+<div class="count" id="ac"></div>
+<div id="al"></div>
+</section>
+
+<section id="b" hidden>
+<div class="note"><b>Poise here is the boss's stance bar.</b> A poise damage total at or above this value breaks it. These are the base values from the enemy table; NG+ scaling and phase effects can change them. Bosses showing a dash have no poise bar in that form.</div>
+<div class="tools">
+<label>Search<input type="search" id="bq" placeholder="Boss name"></label>
+<label>Sort<select id="bs"><option value="id">Game order</option><option value="poise">Poise, high to low</option><option value="name">Name</option></select></label>
+</div>
+<div class="count" id="bc"></div>
+<div class="tbl"><table><thead><tr><th>Boss</th><th class="n">Poise</th><th class="n">Recovery rate</th><th class="n">HP (base)</th><th>Row IDs</th></tr></thead><tbody id="bb"></tbody></table></div>
+</section>
+
+<section id="i" hidden>
+<div class="note"><b>How poise damage is worked out.</b></div>
+<p>Each player attack in the game data has two poise fields: a flat amount and a percentage multiplier. Each weapon has a base poise value. The table uses:</p>
+<p class="mono">poise damage = flat + weapon base poise × multiplier ÷ 100</p>
+<p>Most player attacks have a flat amount of 0, so the multiplier does the work. Upgrade level does not change base poise in this game version (every upgrade row has the same poise rate).</p>
+<p><b>Move groups</b> on the Weapons tab come from each attack's behavior ID. The ranges are a best-effort grouping and the raw ID is always shown, so check it against the move you care about.</p>
+<p><b>Frame speeds</b> come from the player animation timing files (TAE) for each weapon class. Each attack's hit window is matched to the move by its behavior ID. Frames are 30 per second. Two weapons have no timing data, and attacks tied to a particular weapon's own animations may show n/a.</p>
+<p class="mute">Source: regulation.bin from your install. Names from the community Paramdex. Tables read: EquipParamWeapon, ReinforceParamWeapon, BehaviorParam_PC, AtkParam_Pc, Bullet, EquipParamGem, NpcParam.</p>
+</section>
+</div>
+<script>
+const D=__DATA__;
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=x=>Number.isInteger(x)?String(x):(Math.round(x*100)/100).toString();
+const P=(sa,flat,corr)=>flat+sa*corr/100;
+const MOVE=['R2','R2 follow-up','Running R1','Rolling attack','Backstep attack','Jumping R1','Jumping R2','Special attack','Guard counter','Other'];
+function lab(j){
+  const h=Math.floor(j/100),r=j%100,t=Math.floor(r/10),u=j%10,hit=(u%5)+1,alt=u>=5;
+  let grp,name,hand='';
+  if(h===0||h===2){hand=h===2?'2H ':'1H ';name='R1 #'+(t+1);grp=h===2?'Two-handed light':'One-handed light';
+    if(u){name+=' (variant '+u+')'}}
+  else if(h===1||h===3){hand=h===3?'2H ':'1H ';name=MOVE[Math.min(t,9)];grp=h===3?'Two-handed heavy and movement':'One-handed heavy and movement';
+    if(alt)name='Charged '+name;}
+  else if(h===4){name='Mounted / other';grp='Mounted and other';}
+  else if(h===5){name='Riposte / backstab';grp='Ripostes and backstabs';}
+  else {name='Other';grp='Other';}
+  return {grp,name:hand+name,hit:(h===1||h===3)&&u%5?hit:(h===0||h===2)&&u?null:1,j};
+}
+function movesOf(w){let r=[];w.vs.forEach(v=>(D.movesets[v]||[]).forEach(m=>r.push(m)));return r}
+D.weapons.forEach(w=>{w.mv=movesOf(w);const t=topOf(w);w.max=t?t.p:0;w.topl=t?lbl(t):'—';w.topf=t&&t.f?t.f[0]:null;const q=pfOf(w);w.bpf=q?q.pf:0;w.bpfl=q?lbl(q)+' (f'+q.f[0]+')':'n/a';const r1=wrows(w).filter(x=>x.f&&(x.m[0]===0||x.m[0]===200));w.r1=r1.length?Math.min(...r1.map(x=>x.f[0])):null;w.fast=Math.min(999,...wrows(w).filter(x=>x.f).map(x=>x.f[0]));});
+// tabs
+document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('#tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));
+  ['w','a','b','i'].forEach(id=>$('#'+id).hidden=id!==b.dataset.t);
+  try{location.hash=b.dataset.t}catch(e){}
+});
+// weapons
+const types=[...new Set(D.weapons.map(w=>w.type))].sort();
+$('#wt').innerHTML='<option value="">All classes</option>'+types.map(t=>`<option>${esc(t)}</option>`).join('');
+const FPS=30;
+function frOf(w,j){const f=D.frames[w.cat];const x=f&&f[j];return x&&x[0]>=3?x:null}
+function wrows(w){return w.mv.map(m=>{const p=P(w.sa,m[2],m[3]);const f=frOf(w,m[0]);return {m,p,l:lab(m[0]),f,pf:f?p/f[0]:0}}).filter(x=>x.p>0)}
+function topOf(w){const r=wrows(w);if(!r.length)return null;return r.reduce((a,b)=>b.p>a.p?b:a)}
+function pfOf(w){const r=wrows(w).filter(x=>x.f);if(!r.length)return null;return r.reduce((a,b)=>b.pf>a.pf?b:a)}
+function lbl(x){return x.l.name+(x.l.hit>1?', hit '+x.l.hit:'')}
+const f1=x=>(Math.round(x*10)/10).toString();
+function frTxt(x){return x.f?('f'+x.f[0]+(x.f[1]>x.f[0]?'-'+x.f[1]:'')):'n/a'}
+function wmoves(w){
+  const rows=wrows(w);
+  if(!rows.length)return '<span class="mute">No poise-dealing attacks found for this weapon.</span>';
+  const top=topOf(w);
+  const best=rows.slice().sort((a,b)=>b.p-a.p).slice(0,5);
+  const bpf=rows.filter(x=>x.f).sort((a,b)=>b.pf-a.pf).slice(0,5);
+  const mk=(L,k)=>'<table class="mini"><tbody>'+L.map((x,i)=>`<tr><td>${i+1}. ${esc(lbl(x))}</td><td class="n">${frTxt(x)}</td><td class="n"><b>${k==='pf'?f1(x.pf)+' /frame':fmt(x.p)}</b></td></tr>`).join('')+'</tbody></table>';
+  let h='<div class="two"><div><div class="sec">Highest poise damage</div>'+mk(best,'p')+'</div><div><div class="sec">Highest poise per startup frame</div>'+mk(bpf,'pf')+'</div></div>';
+  const g={};rows.forEach(x=>{(g[x.l.grp]=g[x.l.grp]||[]).push(x)});
+  const order=['One-handed light','One-handed heavy and movement','Two-handed light','Two-handed heavy and movement','Mounted and other','Ripostes and backstabs','Other'];
+  order.filter(k=>g[k]).forEach(k=>{
+    h+=`<div class="sec">${k}</div><div class="tbl in"><table class="mini"><thead><tr><th>Move</th><th class="n">Hit</th><th class="n">ID</th><th class="n">Startup</th><th class="n">Active until</th><th class="n">Poise</th><th class="n">Per frame</th></tr></thead><tbody>`+
+    g[k].map(x=>{const m=x.m;return `<tr${x===top?' style="background:var(--hi)"':''}><td>${esc(x.l.name)}${m[5]?' <span class="tag som">unique</span>':''}${m[4]?' <span class="tag">bullet</span>':''}</td><td class="n">${x.l.hit||'–'}</td><td class="n mute">${m[0]}</td><td class="n">${x.f?'f'+x.f[0]:'n/a'}</td><td class="n">${x.f?'f'+x.f[1]:'n/a'}</td><td class="n"><b>${fmt(x.p)}</b></td><td class="n">${x.f?f1(x.pf):'n/a'}</td></tr>`}).join('')+'</tbody></table></div>';});
+  return h+'<div class="mute" style="margin-top:8px;font-size:12px">Frames are at 30 per second, counted from the start of the attack animation. Startup is the frame the hit window opens, and active until is the frame it closes. Charged attacks include their charge animation, so their startup is long. Hits with n/a have no timing in the animation data. Poise per frame is poise divided by startup. The top attack is highlighted.</div>';
+}
+function renderW(){
+  const q=$('#wq').value.toLowerCase(),t=$('#wt').value,u=$('#wu').value,s=$('#ws').value;
+  let L=D.weapons.filter(w=>(!q||w.name.toLowerCase().includes(q))&&(!t||w.type===t)&&(!u||w.up===u));
+  L.sort(s==='name'?(a,b)=>a.name.localeCompare(b.name):s==='sa'?(a,b)=>b.sa-a.sa||a.name.localeCompare(b.name):s==='max'?(a,b)=>b.max-a.max||a.name.localeCompare(b.name):s==='pf'?(a,b)=>b.bpf-a.bpf||a.name.localeCompare(b.name):s==='r1'?(a,b)=>(a.r1||999)-(b.r1||999)||a.name.localeCompare(b.name):(a,b)=>a.fast-b.fast||a.name.localeCompare(b.name));
+  $('#wc').textContent=L.length+' weapons';
+  $('#wb').innerHTML=L.map((w,i)=>`<tr class="row" tabindex="0" data-i="${w.id}"><td>${esc(w.name)}</td><td>${esc(w.type)}</td><td><span class="tag ${w.up==='Somber'?'som':''}">${w.up}${w.maxLv?' +'+w.maxLv:''}</span></td><td class="n">${fmt(w.sa)}</td><td class="n">${fmt(w.max)}</td><td>${esc(w.topl)}</td><td class="n">${w.topf?'f'+w.topf:'n/a'}</td><td class="n">${w.bpf?f1(w.bpf):'n/a'}</td><td>${esc(w.bpfl)}</td><td class="n">${w.r1?'f'+w.r1:'n/a'}</td></tr>`).join('');
+}
+$('#wb').addEventListener('click',e=>{const r=e.target.closest('.row');if(!r)return;const n=r.nextElementSibling;
+  if(n&&n.classList.contains('det')){n.remove();return}
+  const w=D.weapons.find(x=>x.id==r.dataset.i);const d=document.createElement('tr');d.className='det';d.innerHTML=`<td colspan="9">${wmoves(w)}</td>`;r.after(d)});
+$('#wb').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.target.click()}});
+['wq','wt','wu','ws'].forEach(i=>$('#'+i).addEventListener('input',renderW));
+// ashes
+const aw=D.weapons.slice().sort((a,b)=>a.name.localeCompare(b.name));
+$('#aw').innerHTML=aw.map(w=>`<option value="${w.sa}" ${w.name==='Uchigatana'?'selected':''}>${esc(w.name)} (base ${fmt(w.sa)})</option>`).join('');
+function renderA(){
+  const q=$('#aq').value.toLowerCase(),sa=parseFloat($('#aw').value),all=$('#ak').value==='all';
+  const L=D.ashes.filter(a=>(all||a.isAsh)&&(!q||a.name.toLowerCase().includes(q)));
+  $('#ac').textContent=L.length+' skills';
+  $('#al').innerHTML=L.map(a=>{
+    const rows=a.rows.map(r=>[r,P(sa,r[1],r[2])]);const mx=Math.max(0,...rows.map(x=>x[1]));
+    const g={};rows.forEach(x=>(g[x[0][0]]=g[x[0][0]]||[]).push(x));
+    return `<details class="card"><summary><b>${esc(a.name)}</b><span class="mono mute">${rows.length} attack types · highest ${fmt(mx)}</span></summary><div class="body"><table class="mini"><thead><tr><th>Applies to</th><th>Source</th><th class="n">Flat</th><th class="n">Mult %</th><th class="n">Count</th><th class="n">Poise</th></tr></thead><tbody>`+
+    rows.map(([r,p])=>`<tr><td>${esc(r[0])}</td><td>${r[3]==='bullet'?'Bullet':'Melee hit'}</td><td class="n">${fmt(r[1])}</td><td class="n">${fmt(r[2])}</td><td class="n">${r[4]}</td><td class="n"><b>${fmt(p)}</b></td></tr>`).join('')+'</tbody></table></div></details>'}).join('');
+}
+['aq','aw','ak'].forEach(i=>$('#'+i).addEventListener('input',renderA));
+// bosses
+function renderB(){
+  const q=$('#bq').value.toLowerCase(),s=$('#bs').value;
+  let L=D.bosses.filter(b=>!q||b.name.toLowerCase().includes(q));
+  if(s==='poise')L=L.slice().sort((a,b)=>b.poise-a.poise);else if(s==='name')L=L.slice().sort((a,b)=>a.name.localeCompare(b.name));
+  $('#bc').textContent=L.length+' boss entries';
+  $('#bb').innerHTML=L.map(b=>`<tr><td>${esc(b.name)}</td><td class="n">${b.poise<0?'—':fmt(b.poise)}${b.poise>0?'<span class="bar" style="width:'+Math.min(120,b.poise)+'px"></span>':''}</td><td class="n">${b.rec<0?'—':fmt(b.rec)}</td><td class="n">${b.hp.toLocaleString()}</td><td class="mono mute">${b.ids.slice(0,3).join(', ')}${b.ids.length>3?' +'+(b.ids.length-3):''}</td></tr>`).join('');
+}
+['bq','bs'].forEach(i=>$('#'+i).addEventListener('input',renderB));
+renderW();renderA();renderB();
+try{const h=location.hash.slice(1);const b=document.querySelector('#tabs button[data-t="'+h+'"]');if(b)b.click()}catch(e){}
+</script>

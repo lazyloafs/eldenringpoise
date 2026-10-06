@@ -1,9 +1,9 @@
 import pickle,json,re,collections
-P=pickle.load(open('params.pkl','rb'))
+P=pickle.load(open('/home/claude/params.pkl','rb'))
 W=P['EquipParamWeapon'];A=P['AtkParam_Pc'];B=P['BehaviorParam_PC'];U=P['Bullet'];N=P['NpcParam'];R=P['ReinforceParamWeapon'];G=P['EquipParamGem'];S=P['SwordArtsParam']
 def names(f):
     d={}
-    for l in open('paramdex/ER/Names/%s.txt'%f,encoding='utf8'):
+    for l in open('/home/claude/paramdex/ER/Names/%s.txt'%f,encoding='utf8'):
         i,_,n=l.rstrip('\n').partition(' ')
         try:d[int(i)]=n
         except:pass
@@ -44,7 +44,7 @@ for wid,w in sorted(W.items()):
     v=w['behaviorVariationId']; vs=[v]
     if v%100 and (v//100*100) in beh: vs.append(v//100*100)
     for x in vs: moveset(x)
-    weapons.append(dict(id=wid,name=n,type=TYPES[w['wepType']],up=up,maxLv=lv,sa=round(w['saWeaponDamage']*R.get(t,{}).get('saWeaponAtkRate',1.0),2),vs=vs))
+    weapons.append(dict(id=wid,cat=w['wepmotionCategory'],name=n,type=TYPES[w['wepType']],up=up,maxLv=lv,sa=round(w['saWeaponDamage']*R.get(t,{}).get('saWeaponAtkRate',1.0),2),vs=vs))
 # ashes
 ash=collections.defaultdict(lambda:collections.defaultdict(lambda:collections.defaultdict(int)))
 def add(nm,aid,kind):
@@ -80,6 +80,7 @@ for nid,v in N.items():
     if key not in bos: bos[key]=dict(name=n,poise=round(v['superArmorDurability'],1),rec=round(v['superArmorRecoverCorrection'],3),saRate=round(v['saRecoveryRate'],3),hp=v['hp'],ids=[nid])
     else: bos[key]['ids'].append(nid)
 bosses=sorted(bos.values(),key=lambda b:b['ids'][0])
-json.dump(dict(movesets={str(k):v for k,v in movesets.items()},weapons=weapons,ashes=ashes,bosses=bosses),open('data/wiki_data.json','w'),separators=(',',':'))
+FR=json.load(open('data/frames.json'))
+json.dump(dict(frames=FR,movesets={str(k):v for k,v in movesets.items()},weapons=weapons,ashes=ashes,bosses=bosses),open('/home/claude/wiki_data.json','w'),separators=(',',':'))
 print(len(weapons),sum(len(v) for v in movesets.values()),len(ashes),sum(a['isAsh'] for a in ashes),len(bosses))
 print(collections.Counter(w['up'] for w in weapons))

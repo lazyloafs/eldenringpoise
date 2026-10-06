@@ -21,3 +21,7 @@ python tools/build.py
 Then inject `data/wiki_data.json` into the `const D=` line of `index.html`.
 
 Param layouts and row names come from [Paramdex](https://github.com/soulsmods/Paramdex).
+
+## Frame data
+
+`data/frames.json` maps weapon motion category to attack timing: `{category: {behaviorJudgeId: [startupFrame, activeEndFrame]}}` at 30 fps. See `tools/extract_frames.py` for how it was extracted from the game archives.
