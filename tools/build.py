@@ -49,7 +49,7 @@ for wid,w in sorted(W.items()):
     v=w['behaviorVariationId']; vs=[v]
     if v%100 and (v//100*100) in beh: vs.append(v//100*100)
     for x in vs: moveset(x)
-    weapons.append(dict(dlc=1 if wid in DW else 0,unl=1 if (wid not in DW and wid not in wn) else 0,id=wid,cat=w['wepmotionCategory'],name=n,type=TYPES[w['wepType']],up=up,maxLv=lv,sa=round(w['saWeaponDamage']*R.get(t,{}).get('saWeaponAtkRate',1.0),2),vs=vs))
+    weapons.append(dict(dlc=1 if wid in DW else 0,unl=0,id=wid,cat=w['wepmotionCategory'],name=n,type=TYPES[w['wepType']],up=up,maxLv=lv,sa=round(w['saWeaponDamage']*R.get(t,{}).get('saWeaponAtkRate',1.0),2),vs=vs))
 # ashes
 ash=collections.defaultdict(lambda:collections.defaultdict(lambda:collections.defaultdict(int)))
 def add(nm,aid,kind):

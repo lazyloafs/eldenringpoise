@@ -76,7 +76,7 @@ footer{margin-top:32px;color:var(--mute);font-size:12px}
 <header>
 <h1>Elden Ring Poise Wiki</h1>
 <p class="sub">Poise is what makes enemies stagger. Pick a goal below and see which weapon does it best. Every number is read straight from your game files.</p>
-<div class="opts"><label><input type="checkbox" id="gd" checked> Include Shadow of the Erdtree DLC weapons and bosses</label><label><input type="checkbox" id="gu" checked> Include unlisted items (in the game files but not in community lists, may be cut content)</label></div>
+<div class="opts"><label><input type="checkbox" id="gd" checked> Include Shadow of the Erdtree DLC weapons and bosses</label></div>
 </header>
 <nav role="tablist" id="tabs">
 <button role="tab" aria-selected="true" data-t="f">Find a weapon</button>
@@ -154,7 +154,8 @@ footer{margin-top:32px;color:var(--mute);font-size:12px}
 <p>Most player attacks have a flat amount of 0, so the multiplier does the work. Upgrade level does not change base poise in this game version (every upgrade row has the same poise rate).</p>
 <p><b>Move groups</b> on the Weapons tab come from each attack's behavior ID. The ranges are a best-effort grouping and the raw ID is always shown, so check it against the move you care about.</p>
 <p><b>Frame speeds</b> come from the player animation timing files (TAE) for each weapon class. Each attack's hit window is matched to the move by its behavior ID. Frames are 30 per second. Two weapons have no timing data, and attacks tied to a particular weapon's own animations may show n/a.</p>
-<p><b>Power stance</b> attacks are the dual-wield move IDs in the 600 and 700 ranges. They are listed by ID because I could not confirm which button each one belongs to. <b>DLC</b> means the weapon or boss appears in the Shadow of the Erdtree text files. <b>Unlisted</b> items are in the game files but not in the community name lists or the DLC text, so they may be cut or new content.</p>
+<p><b>Power stance</b> attacks are the dual-wield move IDs in the 600 and 700 ranges. They are listed by ID because I could not confirm which button each one belongs to. <b>DLC</b> means the weapon or boss appears in the Shadow of the Erdtree text files.</p>
+<p>Weapons that the community name lists do not know yet (Idus Sword, Reed Great Katana and a few others) come from the Tarnished Edition changes in your install and are treated as base game.</p>
 <p class="mute">Source: regulation.bin from your install. Names from the community Paramdex. Tables read: EquipParamWeapon, ReinforceParamWeapon, BehaviorParam_PC, AtkParam_Pc, Bullet, EquipParamGem, NpcParam.</p>
 </section>
 </div>
@@ -188,7 +189,7 @@ document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{
 });
 // weapons
 const G={dlc:true,unl:true};const vis=w=>(!w.dlc||G.dlc)&&(!w.unl||G.unl);
-const wtag=w=>(w.dlc?' <span class="tag som">DLC</span>':'')+(w.unl?' <span class="tag" title="In the game files but not in community lists; may be cut or new content">unlisted</span>':'');
+const wtag=w=>(w.dlc?' <span class="tag som">DLC</span>':'');
 const types=[...new Set(D.weapons.map(w=>w.type))].sort();
 $('#wt').innerHTML='<option value="">All classes</option>'+types.map(t=>`<option>${esc(t)}</option>`).join('');
 const FPS=30;
@@ -349,7 +350,6 @@ chips('#kh',[['1H','One hand'],['2H','Two hands'],['PS','Power stance (dual wiel
 
 function renderAll(){fillAW();fillK();renderW();renderF();renderA();renderB();renderK()}
 $('#gd').addEventListener('input',()=>{G.dlc=$('#gd').checked;renderAll()});
-$('#gu').addEventListener('input',()=>{G.unl=$('#gu').checked;renderAll()});
 renderF();renderK();
 try{const h=location.hash.slice(1);const b=document.querySelector('#tabs button[data-t="'+h+'"]');if(b)b.click()}catch(e){}
 </script>
