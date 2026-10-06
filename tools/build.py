@@ -10,6 +10,7 @@ def names(f):
     return d
 wn,an,bn,nn,gn,sn=[names(x) for x in('EquipParamWeapon','AtkParam_Pc','Bullet','NpcParam','EquipParamGem','SwordArtsParam')]
 GN={int(k):v for k,v in json.load(open('data/game_names.json')).items()}
+DL=json.load(open('data/dlc_ids.json'));DW=set(DL['weapon']);DN=set(DL['npc'])-{0}
 NG={int(k):v for k,v in json.load(open('data/npc_names.json')).items()}
 TYPES={1:'Dagger',3:'Straight Sword',5:'Greatsword',7:'Colossal Sword',9:'Curved Sword',11:'Curved Greatsword',13:'Katana',14:'Twinblade',15:'Thrusting Sword',16:'Heavy Thrusting Sword',17:'Axe',19:'Greataxe',21:'Hammer',23:'Great Hammer',24:'Flail',25:'Spear',28:'Great Spear',29:'Halberd',31:'Reaper',33:'Fist',35:'Fist',37:'Claw',39:'Whip',41:'Colossal Weapon',50:'Light Bow',51:'Bow',53:'Greatbow',55:'Crossbow',56:'Ballista',57:'Glintstone Staff',61:'Sacred Seal',65:'Small Shield',67:'Medium Shield',69:'Greatshield',87:'Torch',88:'Hand-to-Hand',89:'Perfume Bottle',90:'Thrusting Shield',91:'Throwing Blade',92:'Backhand Blade',93:'Light Greatsword',94:'Great Katana',95:'Beast Claw'}
 def levels(t):
@@ -48,7 +49,7 @@ for wid,w in sorted(W.items()):
     v=w['behaviorVariationId']; vs=[v]
     if v%100 and (v//100*100) in beh: vs.append(v//100*100)
     for x in vs: moveset(x)
-    weapons.append(dict(id=wid,cat=w['wepmotionCategory'],name=n,type=TYPES[w['wepType']],up=up,maxLv=lv,sa=round(w['saWeaponDamage']*R.get(t,{}).get('saWeaponAtkRate',1.0),2),vs=vs))
+    weapons.append(dict(dlc=1 if wid in DW else 0,unl=1 if (wid not in DW and wid not in wn) else 0,id=wid,cat=w['wepmotionCategory'],name=n,type=TYPES[w['wepType']],up=up,maxLv=lv,sa=round(w['saWeaponDamage']*R.get(t,{}).get('saWeaponAtkRate',1.0),2),vs=vs))
 # ashes
 ash=collections.defaultdict(lambda:collections.defaultdict(lambda:collections.defaultdict(int)))
 def add(nm,aid,kind):
@@ -81,7 +82,7 @@ for nid,v in N.items():
     n=NG.get(v.get('nameId',-1)) or nn.get(nid,'')
     if not n or n=='?' or n=='[ERROR]': continue
     key=(n,v['superArmorDurability'],round(v['superArmorRecoverCorrection'],3),v['hp'])
-    if key not in bos: bos[key]=dict(name=n,poise=round(v['superArmorDurability'],1),rec=round(v['superArmorRecoverCorrection'],3),saRate=round(v['saRecoveryRate'],3),hp=v['hp'],ids=[nid])
+    if key not in bos: bos[key]=dict(name=n,poise=round(v['superArmorDurability'],1),rec=round(v['superArmorRecoverCorrection'],3),saRate=round(v['saRecoveryRate'],3),hp=v['hp'],ids=[nid],dlc=1 if (nid>=50000000 or v.get('nameId') in DN) else 0)
     else: bos[key]['ids'].append(nid)
 bosses=sorted(bos.values(),key=lambda b:b['ids'][0])
 FR=json.load(open('/home/claude/frames.json'))

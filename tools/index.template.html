@@ -28,7 +28,7 @@ table{border-collapse:collapse;width:100%;min-width:560px}
 #w table:not(.mini){min-width:900px}
 th,td{text-align:left;padding:7px 12px;border-bottom:1px solid var(--line);vertical-align:top}
 th{font:500 12px var(--body);letter-spacing:.05em;text-transform:uppercase;color:var(--mute);background:var(--bg);position:sticky;top:0}
-th.s{cursor:pointer}
+th.s{cursor:pointer;user-select:none}th.s:hover{color:var(--fg)}
 td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-nums;white-space:nowrap}
 .row{cursor:pointer}.row:hover{background:var(--hi)}
 .tag{display:inline-block;font-size:11px;padding:1px 7px;border-radius:9px;border:1px solid var(--line);color:var(--mute)}
@@ -68,6 +68,7 @@ td.n,th.n{text-align:right;font-family:var(--mono);font-variant-numeric:tabular-
 .kv div{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:12px 14px}
 .kv b{display:block;font:400 28px var(--display)}
 .kv span{font-size:12px;color:var(--mute);text-transform:uppercase;letter-spacing:.04em}
+.opts{display:flex;gap:6px 22px;flex-wrap:wrap;margin-top:12px;font-size:13px}.opts label{display:flex;gap:7px;align-items:center;cursor:pointer}.opts input{width:16px;height:16px;accent-color:var(--accent)}
 footer{margin-top:32px;color:var(--mute);font-size:12px}
 @media (prefers-reduced-motion:no-preference){.row{transition:background .12s}}
 </style>
@@ -75,6 +76,7 @@ footer{margin-top:32px;color:var(--mute);font-size:12px}
 <header>
 <h1>Elden Ring Poise Wiki</h1>
 <p class="sub">Poise is what makes enemies stagger. Pick a goal below and see which weapon does it best. Every number is read straight from your game files.</p>
+<div class="opts"><label><input type="checkbox" id="gd" checked> Include Shadow of the Erdtree DLC weapons and bosses</label><label><input type="checkbox" id="gu" checked> Include unlisted items (in the game files but not in community lists, may be cut content)</label></div>
 </header>
 <nav role="tablist" id="tabs">
 <button role="tab" aria-selected="true" data-t="f">Find a weapon</button>
@@ -89,9 +91,10 @@ footer{margin-top:32px;color:var(--mute);font-size:12px}
 <div class="steps">
 <div class="step"><div class="q"><span class="num">1</span>What do you want?</div><div class="chips" id="fg"></div><div class="mute" id="fgd"></div></div>
 <div class="step"><div class="q"><span class="num">2</span>How do you hold it?</div><div class="chips" id="fh"></div></div>
-<div class="step"><div class="q"><span class="num">3</span>Narrow it down <span class="mute">(optional)</span></div>
+<div class="step"><div class="q"><span class="num">3</span>Only show certain weapons <span class="mute">(optional)</span></div>
 <div class="tools" style="padding:0"><label>Weapon type<select id="ft"></select></label><label>Upgrade path<select id="fu"><option value="">Any</option><option>Regular</option><option>Somber</option></select></label><label>Name contains<input type="search" id="fq" placeholder="Search"></label></div>
-<div class="chips" id="fl" hidden></div></div>
+</div>
+<div class="step" id="fls" hidden><div class="q"><span class="num">4</span>How long can your combo take?</div><div class="chips" id="fl"></div><div class="mute">Counted from your first light attack until the last one lands. Longer lets you chain more hits.</div></div>
 </div>
 <div class="count" id="fc"></div>
 <div id="fr"></div>
@@ -110,7 +113,7 @@ footer{margin-top:32px;color:var(--mute);font-size:12px}
 <label>Search<input type="search" id="wq" placeholder="Weapon name"></label>
 <label>Class<select id="wt"></select></label>
 <label>Upgrade path<select id="wu"><option value="">All</option><option>Regular</option><option>Somber</option></select></label>
-<label>Hand<select id="wh"><option value="">Any</option><option value="1H">One-handed</option><option value="2H">Two-handed</option></select></label>
+<label>Hand<select id="wh"><option value="">Any</option><option value="1H">One-handed</option><option value="2H">Two-handed</option><option value="PS">Power stance (dual wield)</option></select></label>
 <label>Attack type<select id="wk"></select></label>
 <label>Sort<select id="ws"><option value="name">Name</option><option value="sa">Base poise</option><option value="max">Highest hit</option><option value="pf">Poise per frame</option><option value="r1">Fastest R1 startup</option><option value="fast">Fastest any attack</option><option value="combo">Best R1 chain combo</option></select></label>
 <label>Combo frame limit<input type="number" id="wf" value="60" min="10" max="400" step="5" style="width:90px"></label>
@@ -138,10 +141,10 @@ footer{margin-top:32px;color:var(--mute);font-size:12px}
 <div class="note"><b>Poise here is the boss's stance bar.</b> A poise damage total at or above this value breaks it. These are the base values from the enemy table; NG+ scaling and phase effects can change them. Bosses showing a dash have no poise bar in that form.</div>
 <div class="tools">
 <label>Search<input type="search" id="bq" placeholder="Boss name"></label>
-<label>Sort<select id="bs"><option value="id">Game order</option><option value="poise">Poise, high to low</option><option value="name">Name</option></select></label>
+<label>Sort<select id="bs"><option value="id">Game order</option><option value="poise-d">Poise, high to low</option><option value="poise-a">Poise, low to high</option><option value="rec-d">Poise recovery, fastest first</option><option value="rec-a">Poise recovery, slowest first</option><option value="hp-d">HP, high to low</option><option value="hp-a">HP, low to high</option><option value="name-a">Name, A to Z</option></select></label>
 </div>
 <div class="count" id="bc"></div>
-<div class="tbl"><table><thead><tr><th>Boss</th><th class="n">Poise</th><th class="n">Recovery rate</th><th class="n">HP (base)</th><th>Row IDs</th></tr></thead><tbody id="bb"></tbody></table></div>
+<div class="tbl"><table><thead><tr><th class="s" data-k="name">Boss</th><th class="n s" data-k="poise">Poise</th><th class="n s" data-k="rec">Recovery rate</th><th class="n s" data-k="hp">HP (base)</th><th>Row IDs</th></tr></thead><tbody id="bb"></tbody></table></div>
 </section>
 
 <section id="i" hidden>
@@ -151,6 +154,7 @@ footer{margin-top:32px;color:var(--mute);font-size:12px}
 <p>Most player attacks have a flat amount of 0, so the multiplier does the work. Upgrade level does not change base poise in this game version (every upgrade row has the same poise rate).</p>
 <p><b>Move groups</b> on the Weapons tab come from each attack's behavior ID. The ranges are a best-effort grouping and the raw ID is always shown, so check it against the move you care about.</p>
 <p><b>Frame speeds</b> come from the player animation timing files (TAE) for each weapon class. Each attack's hit window is matched to the move by its behavior ID. Frames are 30 per second. Two weapons have no timing data, and attacks tied to a particular weapon's own animations may show n/a.</p>
+<p><b>Power stance</b> attacks are the dual-wield move IDs in the 600 and 700 ranges. They are listed by ID because I could not confirm which button each one belongs to. <b>DLC</b> means the weapon or boss appears in the Shadow of the Erdtree text files. <b>Unlisted</b> items are in the game files but not in the community name lists or the DLC text, so they may be cut or new content.</p>
 <p class="mute">Source: regulation.bin from your install. Names from the community Paramdex. Tables read: EquipParamWeapon, ReinforceParamWeapon, BehaviorParam_PC, AtkParam_Pc, Bullet, EquipParamGem, NpcParam.</p>
 </section>
 </div>
@@ -168,10 +172,11 @@ function lab(j){
     if(u){name+=' (variant '+u+')'}}
   else if(h===1||h===3){hand=h===3?'2H ':'1H ';name=MOVE[Math.min(t,9)];grp=h===3?'Two-handed heavy and movement':'One-handed heavy and movement';
     if(alt)name='Charged '+name;}
+  else if(h===6||h===7){hand='PS';name='Power stance attack ('+j+')';grp='Power stance (dual wield)'}
   else if(h===4){name='Mounted / other';grp='Mounted and other';}
   else if(h===5){name='Riposte / backstab';grp='Ripostes and backstabs';}
   else {name='Other';grp='Other';}
-  const kind=name.startsWith('R1 #')?'R1 (any chain hit)':name;return {grp,kind,hand:hand.trim(),name:hand+name,hit:(h===1||h===3)&&u%5?hit:(h===0||h===2)&&u?null:1,j};
+  const kind=name.startsWith('R1 #')?'R1 (any chain hit)':hand==='PS'?'Power stance attack':name;return {grp,kind,hand:hand.trim(),name:(hand==='PS'?'':hand)+name,hit:(h===1||h===3)&&u%5?hit:(h===0||h===2)&&u?null:1,j};
 }
 function movesOf(w){let r=[];w.vs.forEach(v=>(D.movesets[v]||[]).forEach(m=>r.push(m)));return r}
 D.weapons.forEach(w=>{w.mv=movesOf(w)});
@@ -182,6 +187,8 @@ document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{
   try{location.hash=b.dataset.t}catch(e){}
 });
 // weapons
+const G={dlc:true,unl:true};const vis=w=>(!w.dlc||G.dlc)&&(!w.unl||G.unl);
+const wtag=w=>(w.dlc?' <span class="tag som">DLC</span>':'')+(w.unl?' <span class="tag" title="In the game files but not in community lists; may be cut or new content">unlisted</span>':'');
 const types=[...new Set(D.weapons.map(w=>w.type))].sort();
 $('#wt').innerHTML='<option value="">All classes</option>'+types.map(t=>`<option>${esc(t)}</option>`).join('');
 const FPS=30;
@@ -224,7 +231,7 @@ function wmoves(w){
   const cs=chains(w);
   if(cs.length){const lim=+$('#wf').value||60;h+='<div class="sec">R1 chain combos</div><table class="mini"><thead><tr><th>Combo</th><th>Poise per hit</th><th class="n">Total poise</th><th class="n">Est. frames to final hit</th></tr></thead><tbody>'+cs.slice().sort((a,b)=>b.p-a.p).map(c=>`<tr${c.f<=lim?'':' class="mute"'}><td>${c.hand} R1 #1→#${c.n} (${c.n} hits)</td><td>${brk(c)}</td><td class="n"><b>${fmt(c.p)}</b></td><td class="n">f${c.f}</td></tr>`).join('')+'</tbody></table><div class="mute" style="font-size:12px;margin:4px 0 8px">Estimate: each earlier hit counts up to its active-until frame, then the next attack starts, and the last hit adds its startup. Real chains need the cancel window to open first, so actual times are longer. Greyed rows exceed the frame limit.</div>';}
   const g={};rows.forEach(x=>{(g[x.l.grp]=g[x.l.grp]||[]).push(x)});
-  const order=['One-handed light','One-handed heavy and movement','Two-handed light','Two-handed heavy and movement','Mounted and other','Ripostes and backstabs','Other'];
+  const order=['One-handed light','One-handed heavy and movement','Two-handed light','Two-handed heavy and movement','Power stance (dual wield)','Mounted and other','Ripostes and backstabs','Other'];
   order.filter(k=>g[k]).forEach(k=>{
     h+=`<div class="sec">${k}</div><div class="tbl in"><table class="mini"><thead><tr><th>Move</th><th class="n">Hit</th><th class="n">ID</th><th class="n">Startup</th><th class="n">Active until</th><th class="n">Poise</th><th class="n">Per frame</th></tr></thead><tbody>`+
     g[k].map(x=>{const m=x.m;return `<tr${x===top?' style="background:var(--hi)"':''}><td>${esc(x.l.name)}${m[5]?' <span class="tag som">unique</span>':''}${m[4]?' <span class="tag">bullet</span>':''}</td><td class="n">${x.l.hit||'–'}</td><td class="n mute">${m[0]}</td><td class="n">${x.f?'f'+x.f[0]:'n/a'}</td><td class="n">${x.f?'f'+x.f[1]:'n/a'}</td><td class="n"><b>${fmt(x.p)}</b></td><td class="n">${x.f?f1(x.pf):'n/a'}</td></tr>`}).join('')+'</tbody></table></div>';});
@@ -236,10 +243,10 @@ function fillKinds(){const c={};D.weapons.forEach(w=>w.mv.forEach(m=>{if(P(w.sa,
  $('#wk').innerHTML='<option value="">All attacks</option>'+ks.map(k=>`<option>${esc(k)}</option>`).join('')}
 function renderW(){FL.kind=$('#wk').value;FL.hand=$('#wh').value;
   const q=$('#wq').value.toLowerCase(),t=$('#wt').value,u=$('#wu').value,s=$('#ws').value;
-  D.weapons.forEach(calc);let L=D.weapons.filter(w=>(FL.kind||FL.hand?w.has:true)&&(!q||w.name.toLowerCase().includes(q))&&(!t||w.type===t)&&(!u||w.up===u));
+  D.weapons.forEach(calc);let L=D.weapons.filter(w=>vis(w)&&(FL.kind||FL.hand?w.has:true)&&(!q||w.name.toLowerCase().includes(q))&&(!t||w.type===t)&&(!u||w.up===u));
   L.sort(s==='name'?(a,b)=>a.name.localeCompare(b.name):s==='sa'?(a,b)=>b.sa-a.sa||a.name.localeCompare(b.name):s==='max'?(a,b)=>b.max-a.max||a.name.localeCompare(b.name):s==='pf'?(a,b)=>b.bpf-a.bpf||a.name.localeCompare(b.name):s==='r1'?(a,b)=>(a.r1||999)-(b.r1||999)||a.name.localeCompare(b.name):s==='combo'?(a,b)=>((b.cb?b.cb.p:-1)-(a.cb?a.cb.p:-1))||((a.cb?a.cb.f:999)-(b.cb?b.cb.f:999))||a.name.localeCompare(b.name):(a,b)=>a.fast-b.fast||a.name.localeCompare(b.name));
   $('#wc').textContent=L.length+' weapons';
-  $('#wb').innerHTML=L.map((w,i)=>`<tr class="row" tabindex="0" data-i="${w.id}"><td>${esc(w.name)}</td><td>${esc(w.type)}</td><td><span class="tag ${w.up==='Somber'?'som':''}">${w.up}${w.maxLv?' +'+w.maxLv:''}</span></td><td class="n">${fmt(w.sa)}</td><td class="n">${fmt(w.max)}</td><td>${esc(w.topl)}</td><td class="n">${w.topf?'f'+w.topf:'n/a'}</td><td class="n">${w.bpf?f1(w.bpf):'n/a'}</td><td>${esc(w.bpfl)}</td><td class="n">${w.r1?'f'+w.r1:'n/a'}</td><td>${cTxt(w.cb)}</td></tr>`).join('');
+  $('#wb').innerHTML=L.map((w,i)=>`<tr class="row" tabindex="0" data-i="${w.id}"><td>${esc(w.name)}${wtag(w)}</td><td>${esc(w.type)}</td><td><span class="tag ${w.up==='Somber'?'som':''}">${w.up}${w.maxLv?' +'+w.maxLv:''}</span></td><td class="n">${fmt(w.sa)}</td><td class="n">${fmt(w.max)}</td><td>${esc(w.topl)}</td><td class="n">${w.topf?'f'+w.topf:'n/a'}</td><td class="n">${w.bpf?f1(w.bpf):'n/a'}</td><td>${esc(w.bpfl)}</td><td class="n">${w.r1?'f'+w.r1:'n/a'}</td><td>${cTxt(w.cb)}</td></tr>`).join('');
 }
 $('#wb').addEventListener('click',e=>{const r=e.target.closest('.row');if(!r)return;const n=r.nextElementSibling;
   if(n&&n.classList.contains('det')){n.remove();return}
@@ -249,7 +256,7 @@ $('#wb').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preve
 // ashes
 const aw=D.weapons.slice().sort((a,b)=>a.name.localeCompare(b.name));
 $('#ac2').innerHTML='<option value="">All classes</option>'+types.map(t=>`<option>${esc(t)}</option>`).join('');
-function fillAW(){const t=$('#ac2').value,cur=$('#aw').value;const L=aw.filter(w=>!t||w.type===t);
+function fillAW(){const t=$('#ac2').value,cur=$('#aw').value;const L=aw.filter(w=>vis(w)&&(!t||w.type===t));
  $('#aw').innerHTML=L.map(w=>`<option value="${w.sa}" ${w.name==='Uchigatana'?'selected':''}>${esc(w.name)} (base ${fmt(w.sa)})</option>`).join('');
  if(cur&&[...$('#aw').options].some(o=>o.value===cur))$('#aw').value=cur}
 function renderA(){
@@ -269,18 +276,21 @@ $('#ac2').addEventListener('input',()=>{fillAW();renderA()});
 ['aq','aw','ak','as','ao','am'].forEach(i=>$('#'+i).addEventListener('input',renderA));
 // bosses
 function renderB(){
-  const q=$('#bq').value.toLowerCase(),s=$('#bs').value;
-  let L=D.bosses.filter(b=>!q||b.name.toLowerCase().includes(q));
-  if(s==='poise')L=L.slice().sort((a,b)=>b.poise-a.poise);else if(s==='name')L=L.slice().sort((a,b)=>a.name.localeCompare(b.name));
+  const q=$('#bq').value.toLowerCase(),s=$('#bs').value,[k,dir]=s.split('-');
+  let L=D.bosses.filter(b=>(!b.dlc||G.dlc)&&(!q||b.name.toLowerCase().includes(q)));
+  if(k!=='id'){const key={poise:b=>b.poise,rec:b=>b.rec,hp:b=>b.hp}[k];
+    L=L.slice().sort(k==='name'?(a,b)=>a.name.localeCompare(b.name):(a,b)=>(dir==='a'?key(a)-key(b):key(b)-key(a))||a.name.localeCompare(b.name))}
+  document.querySelectorAll('#b th.s').forEach(th=>th.textContent=th.textContent.replace(/ [▲▼]$/,'')+(th.dataset.k===k?(dir==='a'?' ▲':' ▼'):''));
   $('#bc').textContent=L.length+' boss entries';
-  $('#bb').innerHTML=L.map(b=>`<tr><td>${esc(b.name)}</td><td class="n">${b.poise<0?'—':fmt(b.poise)}${b.poise>0?'<span class="bar" style="width:'+Math.min(120,b.poise)+'px"></span>':''}</td><td class="n">${b.rec<0?'—':fmt(b.rec)}</td><td class="n">${b.hp.toLocaleString()}</td><td class="mono mute">${b.ids.slice(0,3).join(', ')}${b.ids.length>3?' +'+(b.ids.length-3):''}</td></tr>`).join('');
+  $('#bb').innerHTML=L.map(b=>`<tr><td>${esc(b.name)}${b.dlc?' <span class="tag som">DLC</span>':''}</td><td class="n">${b.poise<0?'—':fmt(b.poise)}${b.poise>0?'<span class="bar" style="width:'+Math.min(120,b.poise)+'px"></span>':''}</td><td class="n">${b.rec<0?'—':fmt(b.rec)}</td><td class="n">${b.hp.toLocaleString()}</td><td class="mono mute">${b.ids.slice(0,3).join(', ')}${b.ids.length>3?' +'+(b.ids.length-3):''}</td></tr>`).join('')
 }
+document.querySelectorAll('#b th.s').forEach(th=>th.addEventListener('click',()=>{const k=th.dataset.k,cur=$('#bs').value;$('#bs').value=cur===k+'-d'?k+'-a':(k==='name'?'name-a':k+'-d');renderB()}));
 ['bq','bs'].forEach(i=>$('#'+i).addEventListener('input',renderB));
 fillKinds();renderW();renderA();renderB();
 // ---------- Plain-language finder ----------
 const secs=f=>(f/30).toFixed(2)+' s ('+f+' frames)';
 const F={goal:'hit',hand:'',lim:60,n:10};
-const GOALS={hit:['Hit the hardest','The single biggest poise hit.'],fast:['Hit the fastest','The quickest first light attack (R1), so you land it before the enemy reacts.'],combo:['Best light-attack combo','Most total poise from chaining light attacks (R1, R1, R1...). Pick how long you can spend.'],eff:['Most poise for the wait','Biggest poise for how soon it lands, ignoring very instant attacks. A good all-round pick.']};
+const GOALS={hit:['Hit the hardest','The single biggest poise hit.'],fast:['Hit the fastest','The quickest first light attack (R1), so you land it before the enemy reacts.'],combo:['Best light-attack combo','Most total poise from chaining light attacks (R1, R1, R1...). Pick how long you can spend.'],eff:['Best mix of speed and power','Hits that stagger a lot and land quickly, ignoring near-instant attacks. A good all-round pick.']};
 function chips(id,opts,key,after,st){st=st||F;const el=$(id);el.innerHTML=opts.map(o=>`<button class="chip" aria-pressed="${st[key]===o[0]}" data-v="${o[0]}">${esc(o[1])}</button>`).join('');
  el.onclick=e=>{const b=e.target.closest('.chip');if(!b)return;st[key]=key==='lim'?+b.dataset.v:b.dataset.v;F.n=10;chips(id,opts,key,after,st);after()}}
 function fastR1(w){const r=wrows(w).filter(x=>x.f&&x.l.kind==='R1 (any chain hit)'&&/R1 #1$/.test(x.l.name));return r.length?r.reduce((a,b)=>b.f[0]<a.f[0]||(b.f[0]===a.f[0]&&b.p>a.p)?b:a):null}
@@ -290,19 +300,19 @@ function cardF(w,i){let big,unit,why;
  else if(F.goal==='fast'){const r=fastR1(w);big=(r.f[0]/30).toFixed(2)+' s';unit='to land';why=`<b>${esc(lbl(r))}</b> lands after ${r.f[0]} frames and deals ${fmt(r.p)} poise.`}
  else if(F.goal==='combo'){const c=w.fc;big=fmt(c.p);unit='total poise';why=`<b>${c.hand} light attacks 1 to ${c.n}</b>: ${brk(c)}. Takes about ${secs(c.f)}.`}
  else{const e=effBest(w);big=f1(e.pf);unit='poise per frame';why=`<b>${esc(lbl(e))}</b> deals ${fmt(e.p)} poise and lands after ${e.f[0]} frames.`}
- return `<div class="wc"><div class="rank">${i+1}</div><div><div class="wn">${esc(w.name)}</div><div class="mute">${esc(w.type)} · <span class="tag ${w.up==='Somber'?'som':''}">${w.up}</span> · base poise ${fmt(w.sa)}</div></div><div class="big">${big}<small>${unit}</small></div><div class="why">${why}</div><button data-id="${w.id}" aria-expanded="false">See every attack</button></div>`}
+ return `<div class="wc"><div class="rank">${i+1}</div><div><div class="wn">${esc(w.name)}${wtag(w)}</div><div class="mute">${esc(w.type)} · <span class="tag ${w.up==='Somber'?'som':''}">${w.up}</span> · base poise ${fmt(w.sa)}</div></div><div class="big">${big}<small>${unit}</small></div><div class="why">${why}</div><button data-id="${w.id}" aria-expanded="false">See every attack</button></div>`}
 function renderF(){
  FL.kind='';FL.hand=F.hand;const q=$('#fq').value.toLowerCase(),t=$('#ft').value,u=$('#fu').value;
  D.weapons.forEach(w=>{calc(w);w.fc=bestCombo(w,F.lim)});
- let L=D.weapons.filter(w=>w.has&&(!q||w.name.toLowerCase().includes(q))&&(!t||w.type===t)&&(!u||w.up===u));
+ let L=D.weapons.filter(w=>vis(w)&&w.has&&(!q||w.name.toLowerCase().includes(q))&&(!t||w.type===t)&&(!u||w.up===u));
  const g=F.goal;
  if(g==='hit')L.sort((a,b)=>b.max-a.max||a.name.localeCompare(b.name));
  else if(g==='fast'){L=L.filter(w=>fastR1(w));L.sort((a,b)=>fastR1(a).f[0]-fastR1(b).f[0]||fastR1(b).p-fastR1(a).p||a.name.localeCompare(b.name))}
  else if(g==='combo'){L=L.filter(w=>w.fc);L.sort((a,b)=>b.fc.p-a.fc.p||a.fc.f-b.fc.f||a.name.localeCompare(b.name))}
  else{L=L.filter(w=>effBest(w));L.sort((a,b)=>effBest(b).pf-effBest(a).pf||a.name.localeCompare(b.name))}
  $('#fgd').textContent=GOALS[g][1];
- $('#fl').hidden=g!=='combo';
- $('#fc').textContent=L.length?`Top ${Math.min(F.n,L.length)} of ${L.length} weapons, best first.`:'No weapon matches. Try loosening the choices above.';
+ $('#fls').hidden=g!=='combo';
+ $('#fc').textContent=L.length?`Top ${Math.min(F.n,L.length)} of ${L.length} weapons, best first.`:(F.hand==='PS'&&(g==='fast'||g==='combo')?'Power stance attacks are not light-attack chains, so this goal has no results. Try "Hit the hardest" or "Best mix of speed and power".':'No weapon matches. Try loosening the choices above.');
  $('#fr').innerHTML=L.slice(0,F.n).map(cardF).join('');
  $('#fm').hidden=L.length<=F.n;
  $('#fr').onclick=e=>{const b=e.target.closest('button[data-id]');if(!b)return;const c=b.closest('.wc'),ex=c.querySelector('.dd');
@@ -311,14 +321,17 @@ function renderF(){
 $('#fm').onclick=()=>{F.n+=10;renderF()};
 $('#ft').innerHTML='<option value="">Any type</option>'+types.map(t=>`<option>${esc(t)}</option>`).join('');
 chips('#fg',Object.keys(GOALS).map(k=>[k,GOALS[k][0]]),'goal',renderF);
-chips('#fh',[['','Either way'],['1H','One hand'],['2H','Two hands']],'hand',renderF);
-chips('#fl',[[40,'Quick (about 1.3 s)'],[60,'Normal (about 2 s)'],[90,'Long (about 3 s)'],[150,'Very long (5 s)']],'lim',renderF);
+chips('#fh',[['','Any way'],['1H','One hand'],['2H','Two hands'],['PS','Power stance (dual wield)']],'hand',renderF);
+chips('#fl',[[40,'Up to 1.3 seconds'],[60,'Up to 2 seconds'],[90,'Up to 3 seconds'],[150,'Up to 5 seconds']],'lim',renderF);
 ['fq','ft','fu'].forEach(i=>$('#'+i).addEventListener('input',()=>{F.n=10;renderF()}));
 // ---------- Break a boss ----------
 const K={hand:'2H'};
 const bl=D.bosses.map((b,i)=>[b,i]).filter(x=>x[0].poise>0).sort((a,b)=>a[0].name.localeCompare(b[0].name));
-$('#kw').innerHTML=D.weapons.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(w=>`<option value="${w.id}" ${w.name==='Uchigatana'?'selected':''}>${esc(w.name)}</option>`).join('');
-$('#kb').innerHTML=bl.map(([b,i])=>`<option value="${i}">${esc(b.name)} (poise ${fmt(b.poise)})</option>`).join('');
+function fillK(){const cw=$('#kw').value,cb=$('#kb').value;
+ $('#kw').innerHTML=aw.filter(vis).map(w=>`<option value="${w.id}" ${w.name==='Uchigatana'?'selected':''}>${esc(w.name)}</option>`).join('');
+ $('#kb').innerHTML=bl.filter(([b])=>!b.dlc||G.dlc).map(([b,i])=>`<option value="${i}">${esc(b.name)} (poise ${fmt(b.poise)})</option>`).join('');
+ if(cw&&[...$('#kw').options].some(o=>o.value===cw))$('#kw').value=cw;if(cb&&[...$('#kb').options].some(o=>o.value===cb))$('#kb').value=cb}
+fillK();
 function renderK(){
  const w=D.weapons.find(x=>x.id==$('#kw').value),b=D.bosses[+$('#kb').value];
  FL.kind='';FL.hand=K.hand;
@@ -332,8 +345,11 @@ function renderK(){
  `<p>${cs?`<b>Light-attack chain:</b> ${cs.hand} R1 #1 to #${cs.n} (${brk(cs)} = ${fmt(cs.p)}) breaks it in about ${(cs.f/30).toFixed(1)} s.`:'<b>Light-attack chain:</b> no R1 chain for this weapon adds up to this boss\'s poise.'}</p>`+
  `<p class="mute">Boss poise is the base value from the game files. New Game Plus, boss phases and attacks that boost your poise damage are not included, so treat this as a good estimate. Bosses also recover poise over time, and some bosses can only be staggered at certain moments.</p>`}
 ['kw','kb'].forEach(i=>$('#'+i).addEventListener('input',renderK));
-chips('#kh',[['1H','One hand'],['2H','Two hands']],'hand',renderK,K);
+chips('#kh',[['1H','One hand'],['2H','Two hands'],['PS','Power stance (dual wield)']],'hand',renderK,K);
 
+function renderAll(){fillAW();fillK();renderW();renderF();renderA();renderB();renderK()}
+$('#gd').addEventListener('input',()=>{G.dlc=$('#gd').checked;renderAll()});
+$('#gu').addEventListener('input',()=>{G.unl=$('#gu').checked;renderAll()});
 renderF();renderK();
 try{const h=location.hash.slice(1);const b=document.querySelector('#tabs button[data-t="'+h+'"]');if(b)b.click()}catch(e){}
 </script>
