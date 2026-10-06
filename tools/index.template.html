@@ -67,6 +67,8 @@ footer{margin-top:32px;color:var(--mute);font-size:12px}
 <label>Search<input type="search" id="wq" placeholder="Weapon name"></label>
 <label>Class<select id="wt"></select></label>
 <label>Upgrade path<select id="wu"><option value="">All</option><option>Regular</option><option>Somber</option></select></label>
+<label>Hand<select id="wh"><option value="">Any</option><option value="1H">One-handed</option><option value="2H">Two-handed</option></select></label>
+<label>Attack type<select id="wk"></select></label>
 <label>Sort<select id="ws"><option value="name">Name</option><option value="sa">Base poise</option><option value="max">Highest hit</option><option value="pf">Poise per frame</option><option value="r1">Fastest R1 startup</option><option value="fast">Fastest any attack</option></select></label>
 </div>
 <div class="count" id="wc"></div>
@@ -121,10 +123,10 @@ function lab(j){
   else if(h===4){name='Mounted / other';grp='Mounted and other';}
   else if(h===5){name='Riposte / backstab';grp='Ripostes and backstabs';}
   else {name='Other';grp='Other';}
-  return {grp,name:hand+name,hit:(h===1||h===3)&&u%5?hit:(h===0||h===2)&&u?null:1,j};
+  const kind=name.startsWith('R1 #')?'R1 (any chain hit)':name;return {grp,kind,hand:hand.trim(),name:hand+name,hit:(h===1||h===3)&&u%5?hit:(h===0||h===2)&&u?null:1,j};
 }
 function movesOf(w){let r=[];w.vs.forEach(v=>(D.movesets[v]||[]).forEach(m=>r.push(m)));return r}
-D.weapons.forEach(w=>{w.mv=movesOf(w);const t=topOf(w);w.max=t?t.p:0;w.topl=t?lbl(t):'—';w.topf=t&&t.f?t.f[0]:null;const q=pfOf(w);w.bpf=q?q.pf:0;w.bpfl=q?lbl(q)+' (f'+q.f[0]+')':'n/a';const r1=wrows(w).filter(x=>x.f&&(x.m[0]===0||x.m[0]===200));w.r1=r1.length?Math.min(...r1.map(x=>x.f[0])):null;w.fast=Math.min(999,...wrows(w).filter(x=>x.f).map(x=>x.f[0]));});
+D.weapons.forEach(w=>{w.mv=movesOf(w)});
 // tabs
 document.querySelectorAll('#tabs button').forEach(b=>b.onclick=()=>{
   document.querySelectorAll('#tabs button').forEach(x=>x.setAttribute('aria-selected',x===b));
@@ -136,7 +138,9 @@ const types=[...new Set(D.weapons.map(w=>w.type))].sort();
 $('#wt').innerHTML='<option value="">All classes</option>'+types.map(t=>`<option>${esc(t)}</option>`).join('');
 const FPS=30;
 function frOf(w,j){const f=D.frames[w.cat];const x=f&&f[j];return x&&x[0]>=3?x:null}
-function wrows(w){return w.mv.map(m=>{const p=P(w.sa,m[2],m[3]);const f=frOf(w,m[0]);return {m,p,l:lab(m[0]),f,pf:f?p/f[0]:0}}).filter(x=>x.p>0)}
+const FL={kind:'',hand:''};
+function wrows(w){return w.mv.map(m=>{const p=P(w.sa,m[2],m[3]);const f=frOf(w,m[0]);return {m,p,l:lab(m[0]),f,pf:f?p/f[0]:0}}).filter(x=>x.p>0&&(!FL.kind||x.l.kind===FL.kind)&&(!FL.hand||x.l.hand===FL.hand))}
+function calc(w){const t=topOf(w);w.max=t?t.p:0;w.topl=t?lbl(t):'—';w.topf=t&&t.f?t.f[0]:null;const q=pfOf(w);w.bpf=q?q.pf:0;w.bpfl=q?lbl(q)+' (f'+q.f[0]+')':'n/a';const r1=wrows(w).filter(x=>x.f&&x.l.kind==='R1 (any chain hit)');w.r1=r1.length?Math.min(...r1.map(x=>x.f[0])):null;w.fast=Math.min(999,...wrows(w).filter(x=>x.f).map(x=>x.f[0]));w.has=!!t}
 function topOf(w){const r=wrows(w);if(!r.length)return null;return r.reduce((a,b)=>b.p>a.p?b:a)}
 function pfOf(w){const r=wrows(w).filter(x=>x.f);if(!r.length)return null;return r.reduce((a,b)=>b.pf>a.pf?b:a)}
 function lbl(x){return x.l.name+(x.l.hit>1?', hit '+x.l.hit:'')}
@@ -144,12 +148,12 @@ const f1=x=>(Math.round(x*10)/10).toString();
 function frTxt(x){return x.f?('f'+x.f[0]+(x.f[1]>x.f[0]?'-'+x.f[1]:'')):'n/a'}
 function wmoves(w){
   const rows=wrows(w);
-  if(!rows.length)return '<span class="mute">No poise-dealing attacks found for this weapon.</span>';
+  if(!rows.length)return '<span class="mute">No poise-dealing attacks match the current filters.</span>';
   const top=topOf(w);
   const best=rows.slice().sort((a,b)=>b.p-a.p).slice(0,5);
   const bpf=rows.filter(x=>x.f).sort((a,b)=>b.pf-a.pf).slice(0,5);
   const mk=(L,k)=>'<table class="mini"><tbody>'+L.map((x,i)=>`<tr><td>${i+1}. ${esc(lbl(x))}</td><td class="n">${frTxt(x)}</td><td class="n"><b>${k==='pf'?f1(x.pf)+' /frame':fmt(x.p)}</b></td></tr>`).join('')+'</tbody></table>';
-  let h='<div class="two"><div><div class="sec">Highest poise damage</div>'+mk(best,'p')+'</div><div><div class="sec">Highest poise per startup frame</div>'+mk(bpf,'pf')+'</div></div>';
+  let h=(FL.kind||FL.hand?'<div class="mute" style="margin-bottom:8px">Showing only: '+esc((FL.hand?FL.hand+' ':'')+(FL.kind||'all attacks'))+'. Totals in the main table use the same filter.</div>':'')+'<div class="two"><div><div class="sec">Highest poise damage</div>'+mk(best,'p')+'</div><div><div class="sec">Highest poise per startup frame</div>'+mk(bpf,'pf')+'</div></div>';
   const g={};rows.forEach(x=>{(g[x.l.grp]=g[x.l.grp]||[]).push(x)});
   const order=['One-handed light','One-handed heavy and movement','Two-handed light','Two-handed heavy and movement','Mounted and other','Ripostes and backstabs','Other'];
   order.filter(k=>g[k]).forEach(k=>{
@@ -157,9 +161,13 @@ function wmoves(w){
     g[k].map(x=>{const m=x.m;return `<tr${x===top?' style="background:var(--hi)"':''}><td>${esc(x.l.name)}${m[5]?' <span class="tag som">unique</span>':''}${m[4]?' <span class="tag">bullet</span>':''}</td><td class="n">${x.l.hit||'–'}</td><td class="n mute">${m[0]}</td><td class="n">${x.f?'f'+x.f[0]:'n/a'}</td><td class="n">${x.f?'f'+x.f[1]:'n/a'}</td><td class="n"><b>${fmt(x.p)}</b></td><td class="n">${x.f?f1(x.pf):'n/a'}</td></tr>`}).join('')+'</tbody></table></div>';});
   return h+'<div class="mute" style="margin-top:8px;font-size:12px">Frames are at 30 per second, counted from the start of the attack animation. Startup is the frame the hit window opens, and active until is the frame it closes. Charged attacks include their charge animation, so their startup is long. Hits with n/a have no timing in the animation data. Poise per frame is poise divided by startup. The top attack is highlighted.</div>';
 }
-function renderW(){
+function fillKinds(){const c={};D.weapons.forEach(w=>w.mv.forEach(m=>{if(P(w.sa,m[2],m[3])>0){const k=lab(m[0]).kind;c[k]=(c[k]||0)+1}}));
+ const pref=['R1 (any chain hit)','R2','R2 follow-up','Charged R2','Charged R2 follow-up','Running R1','Charged Running R1','Rolling attack','Backstep attack','Jumping R1','Charged Jumping R1','Jumping R2','Charged Jumping R2','Guard counter','Charged Guard counter','Special attack','Charged Special attack'];
+ const ks=Object.keys(c).sort((a,b)=>{const i=pref.indexOf(a),j=pref.indexOf(b);return (i<0?99:i)-(j<0?99:j)||a.localeCompare(b)});
+ $('#wk').innerHTML='<option value="">All attacks</option>'+ks.map(k=>`<option>${esc(k)}</option>`).join('')}
+function renderW(){FL.kind=$('#wk').value;FL.hand=$('#wh').value;
   const q=$('#wq').value.toLowerCase(),t=$('#wt').value,u=$('#wu').value,s=$('#ws').value;
-  let L=D.weapons.filter(w=>(!q||w.name.toLowerCase().includes(q))&&(!t||w.type===t)&&(!u||w.up===u));
+  D.weapons.forEach(calc);let L=D.weapons.filter(w=>(FL.kind||FL.hand?w.has:true)&&(!q||w.name.toLowerCase().includes(q))&&(!t||w.type===t)&&(!u||w.up===u));
   L.sort(s==='name'?(a,b)=>a.name.localeCompare(b.name):s==='sa'?(a,b)=>b.sa-a.sa||a.name.localeCompare(b.name):s==='max'?(a,b)=>b.max-a.max||a.name.localeCompare(b.name):s==='pf'?(a,b)=>b.bpf-a.bpf||a.name.localeCompare(b.name):s==='r1'?(a,b)=>(a.r1||999)-(b.r1||999)||a.name.localeCompare(b.name):(a,b)=>a.fast-b.fast||a.name.localeCompare(b.name));
   $('#wc').textContent=L.length+' weapons';
   $('#wb').innerHTML=L.map((w,i)=>`<tr class="row" tabindex="0" data-i="${w.id}"><td>${esc(w.name)}</td><td>${esc(w.type)}</td><td><span class="tag ${w.up==='Somber'?'som':''}">${w.up}${w.maxLv?' +'+w.maxLv:''}</span></td><td class="n">${fmt(w.sa)}</td><td class="n">${fmt(w.max)}</td><td>${esc(w.topl)}</td><td class="n">${w.topf?'f'+w.topf:'n/a'}</td><td class="n">${w.bpf?f1(w.bpf):'n/a'}</td><td>${esc(w.bpfl)}</td><td class="n">${w.r1?'f'+w.r1:'n/a'}</td></tr>`).join('');
@@ -168,7 +176,7 @@ $('#wb').addEventListener('click',e=>{const r=e.target.closest('.row');if(!r)ret
   if(n&&n.classList.contains('det')){n.remove();return}
   const w=D.weapons.find(x=>x.id==r.dataset.i);const d=document.createElement('tr');d.className='det';d.innerHTML=`<td colspan="9">${wmoves(w)}</td>`;r.after(d)});
 $('#wb').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();e.target.click()}});
-['wq','wt','wu','ws'].forEach(i=>$('#'+i).addEventListener('input',renderW));
+['wq','wt','wu','ws','wk','wh'].forEach(i=>$('#'+i).addEventListener('input',renderW));
 // ashes
 const aw=D.weapons.slice().sort((a,b)=>a.name.localeCompare(b.name));
 $('#aw').innerHTML=aw.map(w=>`<option value="${w.sa}" ${w.name==='Uchigatana'?'selected':''}>${esc(w.name)} (base ${fmt(w.sa)})</option>`).join('');
@@ -192,6 +200,6 @@ function renderB(){
   $('#bb').innerHTML=L.map(b=>`<tr><td>${esc(b.name)}</td><td class="n">${b.poise<0?'—':fmt(b.poise)}${b.poise>0?'<span class="bar" style="width:'+Math.min(120,b.poise)+'px"></span>':''}</td><td class="n">${b.rec<0?'—':fmt(b.rec)}</td><td class="n">${b.hp.toLocaleString()}</td><td class="mono mute">${b.ids.slice(0,3).join(', ')}${b.ids.length>3?' +'+(b.ids.length-3):''}</td></tr>`).join('');
 }
 ['bq','bs'].forEach(i=>$('#'+i).addEventListener('input',renderB));
-renderW();renderA();renderB();
+fillKinds();renderW();renderA();renderB();
 try{const h=location.hash.slice(1);const b=document.querySelector('#tabs button[data-t="'+h+'"]');if(b)b.click()}catch(e){}
 </script>
