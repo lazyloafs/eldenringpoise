@@ -172,7 +172,7 @@ function lab(j){
   if(h===0||h===2){hand=h===2?'2H ':'1H ';name='R1 #'+(t+1);grp=h===2?'Two-handed light':'One-handed light';
     if(u){name+=' (variant '+u+')'}}
   else if(h===1||h===3){hand=h===3?'2H ':'1H ';name=MOVE[Math.min(t,9)];grp=h===3?'Two-handed heavy and movement':'One-handed heavy and movement';
-    if(alt)name='Charged '+name;}
+    if(alt)name=[3,4,5,6,8,9].includes(Math.min(t,9))?name+' (extra hit)':'Charged '+name;}
   else if(h===6||h===7){hand='PS';name='Power stance attack ('+j+')';grp='Power stance (dual wield)'}
   else if(h===4){name='Mounted / other';grp='Mounted and other';}
   else if(h===5){name='Riposte / backstab';grp='Ripostes and backstabs';}
@@ -249,7 +249,7 @@ function wmoves(w){
   return h+'<div class="mute" style="margin-top:8px;font-size:12px">Frames are at 30 per second, counted from the start of the attack animation. Startup is the frame the hit window opens, and active until is the frame it closes. Charged attacks include their charge animation, so their startup is long. Hits with n/a have no timing in the animation data. Poise per frame is poise divided by startup. The top attack is highlighted.</div>';
 }
 function fillKinds(){const c={};D.weapons.forEach(w=>w.mv.forEach(m=>{if(P(w.sa,m[2],m[3])>0){const k=lab(m[0]).kind;c[k]=(c[k]||0)+1}}));
- const pref=['R1 (any chain hit)','R2','R2 follow-up','Charged R2','Charged R2 follow-up','Running R1','Charged Running R1','Rolling attack','Backstep attack','Jumping R1','Charged Jumping R1','Jumping R2','Charged Jumping R2','Guard counter','Charged Guard counter','Special attack','Charged Special attack'];
+ const pref=['R1 (any chain hit)','R2','R2 follow-up','Charged R2','Charged R2 follow-up','Running R1','Charged Running R1','Rolling attack','Backstep attack','Jumping R1','Jumping R1 (extra hit)','Jumping R2','Jumping R2 (extra hit)','Guard counter','Guard counter (extra hit)','Special attack','Charged Special attack'];
  const ks=Object.keys(c).sort((a,b)=>{const i=pref.indexOf(a),j=pref.indexOf(b);return (i<0?99:i)-(j<0?99:j)||a.localeCompare(b)});
  $('#wk').innerHTML='<option value="">All attacks</option>'+ks.map(k=>`<option>${esc(k)}</option>`).join('')}
 function renderW(){FL.kind=$('#wk').value;FL.hand=$('#wh').value;
