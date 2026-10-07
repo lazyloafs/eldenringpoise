@@ -29,14 +29,26 @@ def atk_of(b):
 movesets={}
 def moveset(v):
     if v in movesets: return
-    rows=[]
+    rows=[];ex={}
+    # Idus Sword (variation 6700): a prefix-6 entry for move 100 sits beside the normal one and matches the second hit seen in game.
+    # It is folded into the normal row (flat and multiplier add, since poise is linear in both) and flagged. Other weapons have similar entries that I have not confirmed, so they are left alone.
+    for k,b in sorted(beh.get(v,[])):
+        if v==6700 and k//100000000==6 and b['behaviorJudgeId']==100:
+            aid,kind=atk_of(b)
+            if kind=='melee' and aid in A and any(kk//100000000 in (1,3) and bb['behaviorJudgeId']==b['behaviorJudgeId'] for kk,bb in beh[v]):
+                ex[b['behaviorJudgeId']]=(round(A[aid]['atkSuperArmor'],2),round(A[aid]['atkSuperArmorCorrection'],1))
     for k,b in sorted(beh.get(v,[])):
         aid,kind=atk_of(b)
         if aid is None or aid not in A: continue
         nm=an.get(aid,'')
         if '[AOW]' in nm: continue
+        j=b['behaviorJudgeId']
+        if j in ex and k//100000000==6: continue
         a=A[aid]
-        rows.append([b['behaviorJudgeId'],nm,round(a['atkSuperArmor'],2),round(a['atkSuperArmorCorrection'],1),1 if kind=='bullet' else 0,1 if k//100000000==3 else 0])
+        row=[j,nm,round(a['atkSuperArmor'],2),round(a['atkSuperArmorCorrection'],1),1 if kind=='bullet' else 0,1 if k//100000000==3 else 0]
+        if j in ex and kind=='melee':
+            row[2]=round(row[2]+ex[j][0],2);row[3]=round(row[3]+ex[j][1],1);row.append(1)
+        rows.append(row)
     movesets[v]=rows
 weapons=[]
 for wid,w in sorted(W.items()):
