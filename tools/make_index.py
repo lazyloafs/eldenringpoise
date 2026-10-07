@@ -10,6 +10,6 @@ reset='''<meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <style>:root{color-scheme:light}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
 '''
-html='<!doctype html>\n<html lang="en">\n<head>\n'+reset+head+'\n</head>\n<body>'+body.replace('__DATA__',d)+'\n</body>\n</html>\n'
+html='<!doctype html>\n<html lang="en" data-theme="light">\n<head>\n'+reset+head+'\n</head>\n<body>'+body.replace('__DATA__',d)+'\n</body>\n</html>\n'
 open('index.html','w',encoding='utf8').write(html)
 print(len(html))
