@@ -18,7 +18,7 @@ git clone https://github.com/soulsmods/Paramdex paramdex
 python tools/extract_params.py "<ELDEN RING>/Game/regulation.bin" paramdex
 python tools/build.py
 ```
-Then inject `data/wiki_data.json` into the `const D=` line of `index.html`.
+Then run `python tools/make_index.py` to rebuild `index.html` from `tools/index.template.html` and `data/wiki_data.json`.
 
 Param layouts and row names come from [Paramdex](https://github.com/soulsmods/Paramdex).
 
