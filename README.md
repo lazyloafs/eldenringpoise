@@ -4,6 +4,18 @@ Poise damage for every weapon (regular and somber), every Ash of War attack and 
 
 Open `index.html` (or enable GitHub Pages on this repo) for the searchable wiki. Raw extracted data is in `data/wiki_data.json`.
 
+## Static pages for search engines
+
+Besides the interactive `index.html`, the repo contains generated pages with real URLs and plain HTML tables: `/weapons/`, `/weapons/<class>/`, `/bosses/`, `/bosses/<boss>/`, `/ashes-of-war/` and `/poise-vs-stance/`, plus `sitemap.xml` and `robots.txt`. The numbers come from the same code the interactive page runs. After changing `data/wiki_data.json` or `tools/index.template.html`, rebuild everything:
+
+```
+npm install
+python tools/make_index.py
+npm run build:pages
+```
+
+Do not edit the generated folders by hand.
+
 ## Formula
 
 `poise damage = flat + weapon base poise × attack multiplier ÷ 100`
