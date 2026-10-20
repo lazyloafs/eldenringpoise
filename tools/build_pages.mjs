@@ -92,6 +92,11 @@ ${baseStyle}
 ${extraCss}
 </head>
 <body>
+<!-- BidVertiser banner 728x90 (top) -->
+<style>.bdv-slot{max-width:1100px;margin:8px auto;text-align:center;overflow:hidden}</style>
+<div class="bdv-slot">
+<SCRIPT data-cfasync="false" SRC="//bdv.bidvertiser.com/BidVertiser.dbm?pid=727485&bid=2107361" TYPE="text/javascript"></SCRIPT>
+</div>
 <div class="wrap">
 <header>
 <div class="crumbs">${trail.map(([n, p], i) => (i < trail.length - 1 ? `<a href="${p}">${esc(n)}</a>` : esc(n))).join(' / ')}</div>
@@ -103,6 +108,11 @@ ${navHtml(nav)}
 ${content}
 </main>
 <footer>Poise values are read from regulation.bin and organised by the <a href="/">Elden Ring Poise Wiki</a>. Names come from the community Paramdex. Unofficial fan project, not affiliated with FromSoftware or Bandai Namco.</footer>
+</div>
+<!-- BidVertiser banner 728x90 (bottom) -->
+<style>.bdv-slot{max-width:1100px;margin:8px auto;text-align:center;overflow:hidden}</style>
+<div class="bdv-slot">
+<SCRIPT data-cfasync="false" SRC="//bdv.bidvertiser.com/BidVertiser.dbm?pid=727485&bid=2107361" TYPE="text/javascript"></SCRIPT>
 </div>
 </body>
 </html>
