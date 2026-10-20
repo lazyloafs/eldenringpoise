@@ -1,0 +1,12 @@
+{
+  "name": "eldenringpoise",
+  "private": true,
+  "type": "module",
+  "description": "Elden Ring Poise Wiki",
+  "scripts": {
+    "build:pages": "node tools/build_pages.mjs"
+  },
+  "devDependencies": {
+    "jsdom": "^26.0.0"
+  }
+}
